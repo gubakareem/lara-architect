@@ -5,6 +5,7 @@ Welcome to the LaraArchitect documentation. The [README](../README.md) is the pr
 ## Quick links
 
 - [Getting started: from install to a working CRUD API](getting-started.md)
+- [Design pattern examples](getting-started.md#6-choosing-a-design-pattern-architecture) — service-repository, actions + DTO, lean, custom presets
 - [Requirements & supported versions](../README.md#requirements)
 - [Installation](../README.md#installation)
 - [The module generator](../README.md#the-module-generator) — architecture presets, field definitions, enum fields, query filters
