@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-21
+
 ### Added
 
 - `EnumHelpers` trait providing `values()`, `options()`, `label()`, `is()` and `isNot()` to backed enums; any helper can be overridden by redeclaring it on the enum.
+- Getting-started guide and README quick-start walkthrough for first CRUD module.
 
 ### Changed
 
@@ -46,5 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Laravel 11, 12 and 13 (PHP 8.2 – 8.5, per framework requirements).
 - Full test suite (PHPUnit via Orchestra Testbench), PHPStan level 5 (Larastan) and Laravel Pint.
 
-[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.1.0
 [1.0.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.0.0
