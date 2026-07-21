@@ -2,40 +2,17 @@
 
 namespace {{ namespace }};
 
-use Illuminate\Support\Str;
+use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;
 
 enum {{ class }}: string
 {
+    /**
+     * Provides values(), options(), label(), is() and isNot().
+     * Override any of them by redeclaring the method here.
+     */
+    use EnumHelpers;
+
     case Draft = 'draft';
     case Active = 'active';
     case Archived = 'archived';
-
-    /**
-     * @return list<string>
-     */
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function options(): array
-    {
-        return array_combine(
-            self::values(),
-            array_map(fn (self $case) => $case->label(), self::cases()),
-        );
-    }
-
-    public function label(): string
-    {
-        return Str::headline($this->value);
-    }
-
-    public function is(self $other): bool
-    {
-        return $this === $other;
-    }
 }

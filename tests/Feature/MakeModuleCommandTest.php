@@ -109,7 +109,8 @@ class MakeModuleCommandTest extends TestCase
 
         $enum = File::get(app_path('Enums/ProductStatus.php'));
         $this->assertStringContainsString('enum ProductStatus: string', $enum);
-        $this->assertStringContainsString('public static function values(): array', $enum);
+        $this->assertStringContainsString('use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;', $enum);
+        $this->assertStringContainsString('use EnumHelpers;', $enum);
 
         $model = File::get(app_path('Models/Product.php'));
         $this->assertStringContainsString('use App\Enums\ProductStatus;', $model);

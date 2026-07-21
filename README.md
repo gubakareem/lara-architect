@@ -141,7 +141,7 @@ A unique field automatically gets `Rule::unique(...)` in the store request and `
 
 ### Enum fields
 
-Declare a field as `enum` (e.g. `status:enum`) and, with the `enum` pattern enabled, the generator produces a string-backed enum class (`App\Enums\ProductStatus`) with `values()`, `options()` and `label()` helpers — and wires it through the whole module:
+Declare a field as `enum` (e.g. `status:enum`) and, with the `enum` pattern enabled, the generator produces a string-backed enum class (`App\Enums\ProductStatus`) that uses the package's `EnumHelpers` trait — giving it `values()`, `options()`, `label()`, `is()` and `isNot()` without any boilerplate. Override any helper by redeclaring it on the enum (e.g. a translated `label()`). The enum is wired through the whole module:
 
 - the model casts the attribute to the enum (`'status' => ProductStatus::class`)
 - the form requests validate it with `Rule::enum(ProductStatus::class)`

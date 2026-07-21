@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `EnumHelpers` trait providing `values()`, `options()`, `label()`, `is()` and `isNot()` to backed enums; any helper can be overridden by redeclaring it on the enum.
+
+### Changed
+
+- Generated enums now use the `EnumHelpers` trait instead of duplicating the helper methods in every enum class.
+
 ## [1.0.0] - 2026-07-21
 
 ### Added
