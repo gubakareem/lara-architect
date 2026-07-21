@@ -15,7 +15,7 @@ For security vulnerabilities, please **do not** open a public issue. Email the m
 ## Development setup
 
 ```bash
-git clone https://github.com/karim-ashraf/lara-architect.git
+git clone https://github.com/gubakareem/lara-architect.git
 cd lara-architect
 composer install
 ```

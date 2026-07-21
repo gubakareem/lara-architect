@@ -18,6 +18,11 @@
             "name": "Karim Ashraf"
         }
     ],
+    "homepage": "https://github.com/gubakareem/lara-architect",
+    "support": {
+        "issues": "https://github.com/gubakareem/lara-architect/issues",
+        "source": "https://github.com/gubakareem/lara-architect"
+    },
     "require": {
         "php": "^8.2",
         "illuminate/console": "^11.0|^12.0|^13.0",

@@ -38,5 +38,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Laravel 11, 12 and 13 (PHP 8.2 – 8.5, per framework requirements).
 - Full test suite (PHPUnit via Orchestra Testbench), PHPStan level 5 (Larastan) and Laravel Pint.
 
-[Unreleased]: https://github.com/karim-ashraf/lara-architect/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/karim-ashraf/lara-architect/releases/tag/v1.0.0
+[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.0.0
