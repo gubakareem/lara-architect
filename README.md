@@ -43,6 +43,48 @@ php artisan vendor:publish --tag=lara-architect-stubs
 
 Published stubs live in `stubs/lara-architect/` and always win over the package defaults.
 
+## Quick start: your first CRUD in five steps
+
+> The full walkthrough with explanations lives in [docs/getting-started.md](docs/getting-started.md).
+
+**1.** See the available presets and patterns:
+
+```bash
+php artisan architect:patterns
+```
+
+**2.** Generate a module (add `--dry-run` first to preview without writing):
+
+```bash
+php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum"
+```
+
+This creates the model (with soft deletes, UUID and filtering), migration, factory, `ProductStatus` enum, repository, service, query filter, store/update form requests, API resource and controller — all wired together and consistent with your `--fields`.
+
+**3.** Run the migration:
+
+```bash
+php artisan migrate
+```
+
+**4.** Register the routes in `routes/api.php` (the command prints this for you):
+
+```php
+Route::apiResource('products', \App\Http\Controllers\ProductController::class);
+```
+
+**5.** Use the API:
+
+```bash
+curl -X POST http://your-app.test/api/products \
+  -H "Content-Type: application/json" -H "Accept: application/json" \
+  -d '{"name": "Desk", "price": 149.99, "sku": "DSK-001", "status": "active"}'
+
+curl "http://your-app.test/api/products?search=desk&price_min=100&status=active"
+```
+
+Validation, filtering, resources and the JSON envelope all work out of the box. To use a different design pattern, pass `--architecture=actions` (action classes + DTO instead of service + repository), set a project-wide default in the config, or hand-pick patterns with `--patterns=...` — details below.
+
 ## The module generator
 
 ### Architecture presets
