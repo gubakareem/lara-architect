@@ -1,0 +1,52 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+{{ filterImport }}{{ requestImports }}use {{ resourceClass }};
+use {{ serviceClass }};
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use KarimAshraf\LaraArchitect\Http\Concerns\RespondsWithJson;
+
+class {{ model }}Controller extends Controller
+{
+    use RespondsWithJson;
+
+    public function __construct(
+        private readonly {{ model }}Service ${{ modelVariable }}Service,
+    ) {}
+
+    public function index({{ indexSignature }}): AnonymousResourceCollection
+    {
+        return {{ model }}Resource::collection(
+            {{ indexQuery }},
+        );
+    }
+
+    public function store({{ storeRequest }} $request): JsonResponse
+    {
+        ${{ modelVariable }} = $this->{{ modelVariable }}Service->create({{ storeData }});
+
+        return $this->respondCreated(new {{ model }}Resource(${{ modelVariable }}));
+    }
+
+    public function show({{ model }} ${{ modelVariable }}): {{ model }}Resource
+    {
+        return new {{ model }}Resource(${{ modelVariable }});
+    }
+
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }}): JsonResponse
+    {
+        ${{ modelVariable }} = $this->{{ modelVariable }}Service->update(${{ modelVariable }}, {{ updateData }});
+
+        return $this->respondSuccess(new {{ model }}Resource(${{ modelVariable }}), '{{ model }} updated successfully.');
+    }
+
+    public function destroy({{ model }} ${{ modelVariable }}): JsonResponse
+    {
+        $this->{{ modelVariable }}Service->delete(${{ modelVariable }});
+
+        return $this->respondDeleted();
+    }
+}

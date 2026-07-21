@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+{{ imports }}use KarimAshraf\LaraArchitect\Http\Requests\BaseFormRequest;
+
+class Update{{ model }}Request extends BaseFormRequest
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+{{ rules }}
+        ];
+    }
+}

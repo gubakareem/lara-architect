@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ repositoryClass }};
+use KarimAshraf\LaraArchitect\Services\BaseService;
+
+/**
+ * @extends BaseService<{{ model }}>
+ */
+class {{ model }}Service extends BaseService
+{
+    public function __construct({{ model }}Repository $repository)
+    {
+        parent::__construct($repository);
+    }
+
+    // Override prepareForCreate(), prepareForUpdate(), created(), updated()
+    // or deleted() to attach {{ model }}-specific business logic.
+}

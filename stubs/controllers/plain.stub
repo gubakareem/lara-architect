@@ -1,0 +1,47 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+{{ filterImport }}{{ requestImports }}use {{ resourceClass }};
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use KarimAshraf\LaraArchitect\Http\Concerns\RespondsWithJson;
+
+class {{ model }}Controller extends Controller
+{
+    use RespondsWithJson;
+
+    public function index({{ indexSignature }}): AnonymousResourceCollection
+    {
+        return {{ model }}Resource::collection(
+            {{ indexQuery }},
+        );
+    }
+
+    public function store({{ storeRequest }} $request): JsonResponse
+    {
+        ${{ modelVariable }} = {{ model }}::create({{ storeData }});
+
+        return $this->respondCreated(new {{ model }}Resource(${{ modelVariable }}));
+    }
+
+    public function show({{ model }} ${{ modelVariable }}): {{ model }}Resource
+    {
+        return new {{ model }}Resource(${{ modelVariable }});
+    }
+
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }}): JsonResponse
+    {
+        ${{ modelVariable }}->fill({{ updateData }})->save();
+
+        return $this->respondSuccess(new {{ model }}Resource(${{ modelVariable }}->refresh()), '{{ model }} updated successfully.');
+    }
+
+    public function destroy({{ model }} ${{ modelVariable }}): JsonResponse
+    {
+        ${{ modelVariable }}->delete();
+
+        return $this->respondDeleted();
+    }
+}

@@ -1,0 +1,24 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use KarimAshraf\LaraArchitect\Database\BaseRepository;
+
+/**
+ * @extends BaseRepository<{{ model }}>
+ */
+class {{ model }}Repository extends BaseRepository
+{
+    protected function model(): string
+    {
+        return {{ model }}::class;
+    }
+
+    // Add {{ model }}-specific query methods here, e.g.:
+    //
+    // public function findBySlug(string $slug): ?{{ model }}
+    // {
+    //     return $this->findBy('slug', $slug);
+    // }
+}

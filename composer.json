@@ -1,0 +1,62 @@
+{
+    "name": "karim-ashraf/lara-architect",
+    "description": "An architecture toolkit for Laravel: base services, repositories, actions and DTOs, plus a dynamic, preset-driven module generator.",
+    "keywords": [
+        "laravel",
+        "architecture",
+        "service-layer",
+        "repository",
+        "actions",
+        "dto",
+        "generator",
+        "scaffolding"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Karim Ashraf"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^10.5|^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "KarimAshraf\\LaraArchitect\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "KarimAshraf\\LaraArchitect\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "KarimAshraf\\LaraArchitect\\LaraArchitectServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "format": "pint",
+        "analyse": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

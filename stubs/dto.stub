@@ -1,0 +1,12 @@
+<?php
+
+namespace {{ namespace }};
+
+{{ imports }}use KarimAshraf\LaraArchitect\Support\BaseData;
+
+final class {{ model }}Data extends BaseData
+{
+    public function __construct(
+{{ properties }}
+    ) {}
+}

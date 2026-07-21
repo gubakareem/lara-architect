@@ -1,0 +1,26 @@
+<?php
+
+namespace {{ namespace }};
+
+{{ imports }}
+
+class {{ model }} extends Model
+{
+{{ traits }}
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+{{ fillable }}
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+{{ casts }}
+        ];
+    }
+}
