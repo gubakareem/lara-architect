@@ -17,7 +17,11 @@ class ListPatternsCommand extends Command
         $this->components->info('Architecture presets (use with make:module --architecture=...)');
 
         foreach (config('lara-architect.generation.architectures', []) as $name => $patterns) {
-            $this->components->twoColumnDetail($name, implode(', ', $patterns));
+            /** @var array<string, string> $descriptions */
+            $descriptions = config('lara-architect.generation.architecture_descriptions', []);
+            $label = isset($descriptions[$name]) ? "{$name} — {$descriptions[$name]}" : $name;
+
+            $this->components->twoColumnDetail($label, implode(', ', $patterns));
         }
 
         $this->newLine();

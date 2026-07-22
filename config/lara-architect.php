@@ -50,6 +50,8 @@ return [
         | will be generated for a module. Feel free to add your own preset,
         | e.g. 'cqrs' => ['model', 'migration', 'query', 'command', ...].
         | The --ui option swaps "resource" ↔ "views" automatically.
+        |
+        | Descriptions are shown by `architect:new` and `architect:patterns`.
         */
         'architectures' => [
             'service-repository' => [
@@ -63,6 +65,12 @@ return [
             'lean' => [
                 'model', 'migration', 'requests', 'resource', 'controller',
             ],
+        ],
+
+        'architecture_descriptions' => [
+            'service-repository' => 'Service + repository layer (classic layered CRUD)',
+            'actions' => 'Single-purpose action classes + DTO (no service/repository)',
+            'lean' => 'Minimal: model, migration, requests, controller only',
         ],
 
         /*

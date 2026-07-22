@@ -323,8 +323,23 @@ class MakeModuleCommandTest extends TestCase
     {
         $this->artisan('architect:new')
             ->expectsQuestion('What should the module be called?', 'Product')
-            ->expectsQuestion('Which architecture preset?', 'service-repository')
-            ->expectsQuestion('API or web (Blade) presentation?', 'api')
+            ->expectsChoice(
+                'Which architecture preset?',
+                'service-repository',
+                [
+                    'service-repository' => 'service-repository — Service + repository layer (classic layered CRUD)',
+                    'actions' => 'actions — Single-purpose action classes + DTO (no service/repository)',
+                    'lean' => 'lean — Minimal: model, migration, requests, controller only',
+                ],
+            )
+            ->expectsChoice(
+                'API or web (Blade) presentation?',
+                'api',
+                [
+                    'api' => 'api — JsonResource + controllers under Http\\Controllers\\Api',
+                    'web' => 'web — Blade views + controllers under Http\\Controllers',
+                ],
+            )
             ->expectsQuestion('Field definitions (e.g. "name:string, status:enum:int, price:decimal:nullable") — leave empty to skip', 'name:string')
             ->expectsConfirmation('Include policy, seeder and test (full feature)?', 'yes')
             ->assertExitCode(0);

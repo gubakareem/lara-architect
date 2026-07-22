@@ -38,26 +38,7 @@ final class TeamConfig
         }
 
         config([
-            'lara-architect' => self::merge((array) config('lara-architect', []), $overrides),
+            'lara-architect' => ConfigMerger::merge((array) config('lara-architect', []), $overrides),
         ]);
-    }
-
-    /**
-     * Recursive merge where associative arrays merge key-by-key and lists
-     * (e.g. pattern lists) are replaced wholesale.
-     *
-     * @param  array<array-key, mixed>  $base
-     * @param  array<array-key, mixed>  $overrides
-     * @return array<array-key, mixed>
-     */
-    private static function merge(array $base, array $overrides): array
-    {
-        foreach ($overrides as $key => $value) {
-            $base[$key] = is_array($value) && isset($base[$key]) && is_array($base[$key]) && ! array_is_list($value)
-                ? self::merge($base[$key], $value)
-                : $value;
-        }
-
-        return $base;
     }
 }

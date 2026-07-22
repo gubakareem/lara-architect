@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-07-22
+
+### Fixed
+
+- Outdated published `config/lara-architect.php` no longer wipes newer generators (`views`, `policy`, `seeder`, `test`, …). Package defaults are deep-merged under the published file, so `architect:new --ui=web` and `architect:feature` keep working after upgrades without re-publishing config.
+
+### Improved
+
+- `architect:new` (and `architect:patterns`) show a short description beside each architecture preset and UI option so developers can tell service-repository, actions, and lean apart at a glance.
+
 ## [1.4.1] - 2026-07-22
 
 ### Fixed
@@ -112,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Laravel 11, 12 and 13 (PHP 8.2 – 8.5, per framework requirements).
 - Full test suite (PHPUnit via Orchestra Testbench), PHPStan level 5 (Larastan) and Laravel Pint.
 
-[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.2
 [1.4.1]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.1
 [1.4.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.0
 [1.3.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.3.0
