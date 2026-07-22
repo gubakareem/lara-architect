@@ -5,69 +5,117 @@ declare(strict_types=1);
 namespace KarimAshraf\LaraArchitect\Console;
 
 use Illuminate\Console\Command;
-use KarimAshraf\LaraArchitect\Analysis\CodeScanner;
-use KarimAshraf\LaraArchitect\Contracts\LintRule;
+use KarimAshraf\LaraArchitect\Architecture\Baseline;
+use KarimAshraf\LaraArchitect\Architecture\EngineFactory;
+use KarimAshraf\LaraArchitect\Architecture\Violation;
 use KarimAshraf\LaraArchitect\Support\TeamConfig;
+use Throwable;
 
-/**
- * Checks the application against the architectural conventions the package
- * scaffolds: controllers stay thin, repositories stay behind services,
- * validation lives in form requests, models do not depend on the HTTP layer.
- */
 class LintCommand extends Command
 {
     protected $signature = 'architect:lint
-        {--path=* : Paths to scan, relative to the project root (defaults to lint.paths config)}';
+        {--path=* : Paths to scan, relative to the project root}
+        {--format=console : Output format: console|json (sarif reserved)}
+        {--baseline= : Baseline file path (default: architect-baseline.json)}
+        {--update-baseline : Write the current violations to the baseline file}
+        {--ignore-baseline : Report every violation, including baselined ones}';
 
-    protected $description = 'Lint the application against LaraArchitect architecture conventions';
+    protected $description = 'Lint the application against LaraArchitect architecture rules';
 
-    public function handle(CodeScanner $scanner): int
+    public function handle(): int
     {
         TeamConfig::apply();
 
-        /** @var list<string> $paths */
-        $paths = $this->option('path') ?: config('lara-architect.lint.paths', ['app']);
+        try {
+            $engine = EngineFactory::engine($this->engineConfig());
+            $paths = $this->option('path') ?: config('lara-architect.lint.paths', ['app']);
+            $result = $engine->lint(base_path(), array_values((array) $paths));
 
-        $violations = [];
-        $files = $scanner->scan($paths);
+            $baselinePath = (string) ($this->option('baseline') ?: base_path('architect-baseline.json'));
+            $baseline = new Baseline($baselinePath, base_path());
 
-        foreach ($files as $file) {
-            foreach ($this->rules() as $rule) {
-                $violations = [...$violations, ...$rule->check($file)];
+            if ($this->option('update-baseline')) {
+                $baseline->write($result->violations);
+                $this->components->info(sprintf(
+                    'Wrote %d violation(s) to baseline [%s].',
+                    count($result->violations),
+                    $this->relative($baselinePath),
+                ));
+
+                return self::SUCCESS;
             }
+
+            $new = $result->violations;
+            $baselined = [];
+
+            if (! $this->option('ignore-baseline') && $baseline->exists()) {
+                [$new, $baselined] = $baseline->partition($result->violations);
+                $result = $result->withViolations($new);
+            }
+
+            $format = (string) $this->option('format');
+            $renderer = EngineFactory::renderer($format);
+
+            if ($format === 'json') {
+                $this->line(rtrim($renderer->render($result, base_path())));
+            } else {
+                $this->renderConsole($result->violations, count($result->graph->nodes()), count($baselined));
+            }
+
+            return $new === [] ? self::SUCCESS : self::FAILURE;
+        } catch (Throwable $exception) {
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
         }
-
-        if ($violations === []) {
-            $this->components->info(sprintf('No architecture violations in %d file(s).', count($files)));
-
-            return self::SUCCESS;
-        }
-
-        foreach ($violations as $violation) {
-            $this->components->twoColumnDetail(
-                sprintf('<fg=red>%s</>:%d [%s]', $this->relativePath($violation->path), $violation->line, $violation->rule),
-                $violation->message,
-            );
-        }
-
-        $this->newLine();
-        $this->components->error(sprintf('%d violation(s) found in %d file(s).', count($violations), count($files)));
-
-        return self::FAILURE;
     }
 
     /**
-     * @return list<LintRule>
+     * @param  list<Violation>  $violations
      */
-    private function rules(): array
+    private function renderConsole(array $violations, int $files, int $baselined): void
     {
-        /** @var list<class-string<LintRule>> $classes */
-        $classes = config('lara-architect.lint.rules', []);
+        if ($violations === []) {
+            $message = sprintf('No architecture violations in %d class(es).', $files);
 
-        return array_map(fn (string $class): LintRule => $this->laravel->make($class), $classes);
+            if ($baselined > 0) {
+                $message .= sprintf(' (%d baselined)', $baselined);
+            }
+
+            $this->components->info($message);
+
+            return;
+        }
+
+        foreach ($violations as $violation) {
+            $this->line(sprintf(
+                '  <fg=red>%s</>:%d [%s] %s',
+                $this->relative($violation->path),
+                $violation->line,
+                $violation->rule,
+                $violation->message,
+            ));
+        }
+
+        $this->newLine();
+        $suffix = $baselined > 0 ? sprintf(' (%d baselined)', $baselined) : '';
+        $this->components->error(sprintf('%d violation(s) found.%s', count($violations), $suffix));
     }
 
-    private function relativePath(string $path): string
+    /**
+     * @return array<string, mixed>
+     */
+    private function engineConfig(): array
+    {
+        return [
+            'layers' => (array) config('lara-architect.lint.layers', []),
+            'dependencies' => (array) config('lara-architect.lint.dependencies', []),
+            'thresholds' => (array) config('lara-architect.lint.thresholds', []),
+            'pack' => (string) config('lara-architect.lint.pack', 'laravel'),
+        ];
+    }
+
+    private function relative(string $path): string
     {
         return str_replace([base_path().DIRECTORY_SEPARATOR, base_path().'/'], '', $path);
     }

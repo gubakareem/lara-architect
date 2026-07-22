@@ -2,27 +2,25 @@
 
 declare(strict_types=1);
 
-namespace KarimAshraf\LaraArchitect\Analysis;
+namespace KarimAshraf\LaraArchitect\Architecture;
 
 /**
- * A parsed PHP source file with just enough structure for lint rules and
- * metrics: namespace, imports and line access. Intentionally regex-based —
- * fast, dependency-free and good enough for convention checks.
+ * A scanned PHP source file. Extractors read this; architecture rules
+ * never do — they only see the graph built from it.
  */
-final class ScannedFile
+final class ArchitectureFile
 {
     /** @var list<string> */
     public readonly array $lines;
 
     public readonly string $namespace;
 
-    /** @var list<string> Fully-qualified imports from `use` statements. */
+    /** @var list<string> */
     public readonly array $imports;
 
-    /** @var array<string, string> Local alias (short name) => fully-qualified class. */
+    /** @var array<string, string> short alias => fqcn */
     public readonly array $importAliases;
 
-    /** Short name of the first class/interface/trait/enum declared in the file. */
     public readonly string $className;
 
     public function __construct(
@@ -61,30 +59,23 @@ final class ScannedFile
         ) ? $matches[1] : '';
     }
 
-    /**
-     * Fully-qualified name of the class declared in this file, or '' for
-     * files without a class-like declaration.
-     */
-    public function fqcn(): string
+    public function nodeId(): ?NodeId
     {
         if ($this->className === '') {
-            return '';
+            return null;
         }
 
-        return $this->namespace === '' ? $this->className : $this->namespace.'\\'.$this->className;
+        $fqcn = $this->namespace === '' ? $this->className : $this->namespace.'\\'.$this->className;
+
+        return NodeId::fromClass($fqcn);
     }
 
-    /**
-     * Resolve a class reference as written in code (short name, relative or
-     * fully-qualified) to a fully-qualified class name using the file's
-     * imports and namespace.
-     */
-    public function resolveClass(string $reference): string
+    public function resolveClass(string $reference): NodeId
     {
         $reference = trim($reference);
 
         if (str_starts_with($reference, '\\')) {
-            return ltrim($reference, '\\');
+            return NodeId::fromClass($reference);
         }
 
         $head = str_contains($reference, '\\')
@@ -94,50 +85,19 @@ final class ScannedFile
         if (isset($this->importAliases[$head])) {
             $resolved = $this->importAliases[$head];
 
-            return str_contains($reference, '\\')
-                ? $resolved.substr($reference, strlen($head))
-                : $resolved;
+            return NodeId::fromClass(
+                str_contains($reference, '\\')
+                    ? $resolved.substr($reference, strlen($head))
+                    : $resolved,
+            );
         }
 
-        return $this->namespace === '' ? $reference : $this->namespace.'\\'.$reference;
-    }
-
-    public function isController(): bool
-    {
-        return str_contains($this->namespace, '\\Http\\Controllers');
-    }
-
-    public function isModel(): bool
-    {
-        return str_ends_with($this->namespace, '\\Models') || str_contains($this->namespace, '\\Models\\');
-    }
-
-    public function isService(): bool
-    {
-        return str_ends_with($this->namespace, '\\Services') || str_contains($this->namespace, '\\Services\\');
+        return NodeId::fromClass(
+            $this->namespace === '' ? $reference : $this->namespace.'\\'.$reference,
+        );
     }
 
     /**
-     * Imports whose namespace starts with the given prefix.
-     *
-     * @return list<string>
-     */
-    public function importsStartingWith(string $prefix): array
-    {
-        return array_values(array_filter(
-            $this->imports,
-            static fn (string $import): bool => str_starts_with($import, $prefix),
-        ));
-    }
-
-    public function importsClass(string $class): bool
-    {
-        return in_array($class, $this->imports, true);
-    }
-
-    /**
-     * 1-based line numbers whose content matches the pattern.
-     *
      * @return list<int>
      */
     public function linesMatching(string $pattern): array

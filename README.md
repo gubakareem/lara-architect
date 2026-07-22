@@ -1,16 +1,32 @@
 # LaraArchitect
 
-An architecture toolkit for Laravel. It gives you three things:
+**Build, enforce, analyze, and evolve Laravel architecture.**
 
-1. **Runtime building blocks** — lean base classes for repositories (with full soft-delete support), CRUD services, single-purpose actions, request-driven query filters, data transfer objects, form requests and JSON responses, so business logic stays out of your controllers.
-2. **A dynamic module generator** — one `make:module` command (plus `architect:feature` for policy/seeder/test, and the `architect:new` interactive wizard) that scaffolds an entire feature using **configurable architecture presets**. Prefer actions over services? Repository pattern? Domain layout? Your own preset? It is all config — versionable per team via `architect.json`.
-3. **Architecture guardrails** — `architect:lint` fails CI when conventions are broken (Eloquent in controllers, inline validation, inverted dependencies) and `architect:analyze` reports layer counts and hotspots.
+LaraArchitect is an architecture operating system for Laravel — not just a generator. It covers the full lifecycle:
 
-```bash
-php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum, notes:text:nullable"
+```
+Design  →  Generate  →  Analyze  →  Enforce  →  Evolve
 ```
 
-generates a ready-to-use module — typed, validated, transactional, and consistent with the rest of your codebase.
+| Pillar | What it does |
+| --- | --- |
+| **Design** | Presets, `architect.json`, publishable stubs, `{module}` domain layouts |
+| **Generate** | `make:module`, `architect:feature`, `architect:new` wizard |
+| **Analyze** | Dependency graph, layer counts, hotspots (`architect:analyze`) |
+| **Enforce** | Declarative layer rules + baseline (`architect:lint`) |
+| **Evolve** | Health score & actionable suggestions (v1.4.1 / v1.6) |
+
+Under the hood sits a **framework-agnostic ArchitectureEngine** — Artisan commands are thin adapters. You can analyze a codebase with no Laravel bootstrap:
+
+```php
+use KarimAshraf\LaraArchitect\Architecture\ArchitectureEngine;
+
+$result = ArchitectureEngine::create()->analyze('/path/to/project', ['app']);
+```
+
+```bash
+php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum"
+```
 
 ## Requirements
 
@@ -236,26 +252,49 @@ Namespace values support a `{module}` placeholder that is replaced with the mode
 
 ## Architecture lint & analysis
 
-Generating a clean structure is half the job — keeping it clean is the other half. Two read-only commands help with that:
+Generating a clean structure is half the job — keeping it clean is the other half. The engine builds a **dependency graph**, evaluates **declarative layer rules**, and reports hotspots — all through one `AnalysisResult` rendered as console or JSON.
 
 ```bash
-# Fails (exit code 1) when conventions are broken — wire it into CI
+# Fails (exit code 1) when layer rules are broken — wire it into CI
 php artisan architect:lint
+php artisan architect:lint --format=json
 
-# Layer counts + hotspots (long classes, fat constructors, God services)
+# Layer counts + violations + hotspots
 php artisan architect:analyze
+php artisan architect:analyze --format=json
 ```
 
-`architect:lint` ships with four rules, each a class implementing `Contracts\LintRule` (register your own in `lint.rules`):
+### Baseline (adopt on day one)
 
-| Rule | Catches |
-| --- | --- |
-| `no-eloquent-in-controllers` | Controllers calling `Model::create/update/where(...)` or the `DB` facade directly |
-| `no-repositories-in-controllers` | Controllers injecting repositories instead of services/actions |
-| `no-inline-validation-in-controllers` | `$request->validate(...)` / `Validator::make(...)` instead of form requests |
-| `models-do-not-depend-on-http` | Models importing controllers, form requests or services |
+Existing apps often have hundreds of violations. Freeze them so only *new* ones fail CI:
 
-`architect:analyze` reports how many controllers/models/services/repositories/actions exist and flags classes above the configurable thresholds (`lint.thresholds`): more than 8 public methods, more than 5 constructor dependencies, or files longer than 300 lines.
+```bash
+php artisan architect:lint --update-baseline   # writes architect-baseline.json
+php artisan architect:lint                    # ignores baselined violations
+php artisan architect:lint --ignore-baseline  # see everything
+```
+
+### Declarative layer rules
+
+The built-in **Laravel** rule pack encodes service-repository conventions (controllers must not depend on models/repositories/DB/inline validation; models must not depend on the HTTP/service layer). Override for any architecture via config or `architect.json`:
+
+```json
+{
+  "lint": {
+    "layers": {
+      "Controller": "App\\Http\\Controllers",
+      "Service": "App\\Domain",
+      "Model": "App\\Models"
+    },
+    "dependencies": [
+      { "from": "Controller", "allow": ["Service", "Request"] },
+      { "from": "Controller", "deny": ["Model", "Repository"] }
+    ]
+  }
+}
+```
+
+Rules never inspect PHP source — only the graph (nodes, edges, layers). That keeps them independent of whether extraction is regex today or AST tomorrow.
 
 ## Runtime building blocks
 

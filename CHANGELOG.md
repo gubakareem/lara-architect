@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-22
+
+### Added
+
+- **ArchitectureEngine** — framework-agnostic façade (`analyze` / `lint` / `graph`) built from use cases (`BuildDependencyGraph`, `LintArchitecture`, `AnalyzeArchitecture`). No Laravel container required.
+- **Dependency graph** with typed edges (`import`, `extends`, `implements`, `uses-trait`, `static-call`, `new`, `method-call`) via `RegexExtractor` behind the `DependencyExtractor` interface.
+- **LayerRegistry** + declarative **allow/deny** layer rules (`LayerDependencyRule`).
+- Built-in **Laravel rule pack** (default) expressing service-repository conventions as layer rules.
+- Immutable **AnalysisResult** with **Console** and **JSON** renderers (`--format=console|json`; `sarif` reserved).
+- **Lint baseline** (`--update-baseline`, `architect-baseline.json`) so legacy apps can adopt lint without failing CI on existing debt.
+- Value objects / IDs: `NodeId`, `LayerId`, `RuleId`, `Dependency`, `Violation`, `Hotspot`, `ArchitectureFile`.
+- Reserved extension interfaces: `MetricCalculator`, `SuggestionProvider`, `RulePack`, `Renderer`.
+
+### Changed
+
+- `architect:lint` / `architect:analyze` now drive the ArchitectureEngine instead of file-scanning convention rules.
+- README leads with the Design → Generate → Analyze → Enforce → Evolve lifecycle.
+
+### Deprecated
+
+- File-based `Contracts\LintRule` implementations under `Analysis\Rules\` — prefer declarative `lint.dependencies` / rule packs. Kept for reference until v2.0.
+
 ## [1.3.0] - 2026-07-22
 
 ### Added
@@ -84,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Laravel 11, 12 and 13 (PHP 8.2 – 8.5, per framework requirements).
 - Full test suite (PHPUnit via Orchestra Testbench), PHPStan level 5 (Larastan) and Laravel Pint.
 
-[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.0
 [1.3.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.3.0
 [1.2.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.2.0
 [1.1.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.1.0

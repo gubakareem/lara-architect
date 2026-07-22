@@ -5,101 +5,84 @@ declare(strict_types=1);
 namespace KarimAshraf\LaraArchitect\Console;
 
 use Illuminate\Console\Command;
-use KarimAshraf\LaraArchitect\Analysis\CodeScanner;
-use KarimAshraf\LaraArchitect\Analysis\ScannedFile;
+use KarimAshraf\LaraArchitect\Architecture\EngineFactory;
 use KarimAshraf\LaraArchitect\Support\TeamConfig;
+use Throwable;
 
-/**
- * Read-only report on the application's architectural shape: how many
- * classes exist per layer, and which classes are drifting (too many public
- * methods, too many constructor dependencies, oversized files).
- */
 class AnalyzeCommand extends Command
 {
     protected $signature = 'architect:analyze
-        {--path=* : Paths to scan, relative to the project root (defaults to lint.paths config)}';
+        {--path=* : Paths to scan, relative to the project root}
+        {--format=console : Output format: console|json (sarif reserved)}';
 
-    protected $description = 'Report architecture metrics for the application';
+    protected $description = 'Report architecture layers, violations and hotspots';
 
-    public function handle(CodeScanner $scanner): int
+    public function handle(): int
     {
         TeamConfig::apply();
 
-        /** @var list<string> $paths */
-        $paths = $this->option('path') ?: config('lara-architect.lint.paths', ['app']);
+        try {
+            $engine = EngineFactory::engine([
+                'layers' => (array) config('lara-architect.lint.layers', []),
+                'dependencies' => (array) config('lara-architect.lint.dependencies', []),
+                'thresholds' => (array) config('lara-architect.lint.thresholds', []),
+                'pack' => (string) config('lara-architect.lint.pack', 'laravel'),
+            ]);
 
-        $files = $scanner->scan($paths);
+            $paths = $this->option('path') ?: config('lara-architect.lint.paths', ['app']);
+            $result = $engine->analyze(base_path(), array_values((array) $paths));
+            $format = (string) $this->option('format');
+            $renderer = EngineFactory::renderer($format);
 
-        $layers = [
-            'Controllers' => static fn (ScannedFile $file): bool => $file->isController(),
-            'Models' => static fn (ScannedFile $file): bool => $file->isModel(),
-            'Services' => static fn (ScannedFile $file): bool => $file->isService(),
-            'Repositories' => static fn (ScannedFile $file): bool => str_contains($file->namespace, '\\Repositories'),
-            'Actions' => static fn (ScannedFile $file): bool => str_contains($file->namespace, '\\Actions'),
-            'Form requests' => static fn (ScannedFile $file): bool => str_contains($file->namespace, '\\Http\\Requests'),
-        ];
+            if ($format === 'json') {
+                $this->line(rtrim($renderer->render($result, base_path())));
 
-        $this->components->info(sprintf('Scanned %d PHP file(s) in [%s].', count($files), implode(', ', $paths)));
-
-        foreach ($layers as $label => $matcher) {
-            $this->components->twoColumnDetail($label, (string) count(array_filter($files, $matcher)));
-        }
-
-        $warnings = $this->collectWarnings($files);
-
-        $this->newLine();
-
-        if ($warnings === []) {
-            $this->components->info('No hotspots detected.');
-
-            return self::SUCCESS;
-        }
-
-        $this->components->warn(sprintf('%d hotspot(s) worth a look:', count($warnings)));
-
-        foreach ($warnings as [$path, $message]) {
-            $this->components->twoColumnDetail($this->relativePath($path), $message);
-        }
-
-        return self::SUCCESS;
-    }
-
-    /**
-     * @param  list<ScannedFile>  $files
-     * @return list<array{string, string}>
-     */
-    private function collectWarnings(array $files): array
-    {
-        $maxPublicMethods = (int) config('lara-architect.lint.thresholds.public_methods', 8);
-        $maxDependencies = (int) config('lara-architect.lint.thresholds.constructor_dependencies', 5);
-        $maxLines = (int) config('lara-architect.lint.thresholds.file_lines', 300);
-
-        $warnings = [];
-
-        foreach ($files as $file) {
-            $publicMethods = count($file->linesMatching('/^\s*(?:final\s+)?public\s+(?:static\s+)?function\s+(?!__)/'));
-
-            if ($publicMethods > $maxPublicMethods) {
-                $warnings[] = [$file->path, sprintf('%d public methods (max %d) — consider splitting responsibilities.', $publicMethods, $maxPublicMethods)];
+                return self::SUCCESS;
             }
 
-            if (preg_match('/function\s+__construct\s*\(([^)]*)\)/s', $file->contents, $matches) === 1) {
-                $dependencies = substr_count($matches[1], '$');
+            $this->components->info(sprintf(
+                'Scanned %d class(es) in [%s].',
+                $result->filesScanned,
+                implode(', ', (array) $paths),
+            ));
 
-                if ($dependencies > $maxDependencies) {
-                    $warnings[] = [$file->path, sprintf('%d constructor dependencies (max %d) — the class may be doing too much.', $dependencies, $maxDependencies)];
+            foreach ($result->layerCounts as $layer => $count) {
+                $this->components->twoColumnDetail($layer, (string) $count);
+            }
+
+            if ($result->violations !== []) {
+                $this->newLine();
+                $this->components->warn(sprintf('%d architecture violation(s):', count($result->violations)));
+
+                foreach ($result->violations as $violation) {
+                    $this->components->twoColumnDetail(
+                        sprintf('%s:%d', $this->relative($violation->path), $violation->line),
+                        $violation->message,
+                    );
                 }
             }
 
-            if (count($file->lines) > $maxLines) {
-                $warnings[] = [$file->path, sprintf('%d lines (max %d) — consider extracting collaborators.', count($file->lines), $maxLines)];
-            }
-        }
+            $this->newLine();
 
-        return $warnings;
+            if ($result->hotspots === []) {
+                $this->components->info('No hotspots detected.');
+            } else {
+                $this->components->warn(sprintf('%d hotspot(s) worth a look:', count($result->hotspots)));
+
+                foreach ($result->hotspots as $hotspot) {
+                    $this->components->twoColumnDetail($this->relative($hotspot->path), $hotspot->message);
+                }
+            }
+
+            return self::SUCCESS;
+        } catch (Throwable $exception) {
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
     }
 
-    private function relativePath(string $path): string
+    private function relative(string $path): string
     {
         return str_replace([base_path().DIRECTORY_SEPARATOR, base_path().'/'], '', $path);
     }

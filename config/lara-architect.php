@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use KarimAshraf\LaraArchitect\Analysis\Rules\ModelsDoNotDependOnHttpRule;
-use KarimAshraf\LaraArchitect\Analysis\Rules\NoEloquentInControllersRule;
-use KarimAshraf\LaraArchitect\Analysis\Rules\NoInlineValidationInControllersRule;
-use KarimAshraf\LaraArchitect\Analysis\Rules\NoRepositoriesInControllersRule;
 use KarimAshraf\LaraArchitect\Generation\Generators\ActionsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ControllerGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\DtoGenerator;
@@ -194,31 +190,51 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Architecture Lint & Analysis
+    | Architecture Engine (lint & analyze)
     |--------------------------------------------------------------------------
     |
-    | `architect:lint` checks the paths below against the registered rules
-    | (each implements Contracts\LintRule — add your own to extend it) and
-    | fails when violations are found, so it can run in CI.
-    | `architect:analyze` reports layer counts and hotspots using the
-    | thresholds below.
+    | Driven by ArchitectureEngine — a framework-agnostic core that builds a
+    | dependency graph, evaluates declarative layer rules, and reports
+    | hotspots. Empty `layers` / `dependencies` fall back to the built-in
+    | Laravel rule pack. Override via config or architect.json.
+    |
+    | Example architect.json:
+    |
+    | {
+    |   "lint": {
+    |     "layers": {
+    |       "Controller": "App\\Http\\Controllers",
+    |       "Service": "App\\Domain",
+    |       "Model": "App\\Models"
+    |     },
+    |     "dependencies": [
+    |       { "from": "Controller", "allow": ["Service", "Request"] },
+    |       { "from": "Controller", "deny": ["Model", "Repository"] }
+    |     ]
+    |   }
+    | }
     |
     */
 
     'lint' => [
         'paths' => ['app'],
 
-        'rules' => [
-            NoEloquentInControllersRule::class,
-            NoRepositoriesInControllersRule::class,
-            NoInlineValidationInControllersRule::class,
-            ModelsDoNotDependOnHttpRule::class,
-        ],
+        // Built-in pack when layers/dependencies are empty.
+        'pack' => 'laravel',
+
+        // Layer name => namespace prefix(es). Longest match wins.
+        'layers' => [],
+
+        // Declarative allow/deny rules between layers.
+        'dependencies' => [],
 
         'thresholds' => [
             'public_methods' => 8,
             'constructor_dependencies' => 5,
             'file_lines' => 300,
         ],
+
+        // Path relative to the project root (also overridable via --baseline).
+        'baseline' => 'architect-baseline.json',
     ],
 ];

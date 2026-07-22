@@ -1,15 +1,18 @@
 {
     "name": "karim-ashraf/lara-architect",
-    "description": "An architecture toolkit for Laravel: base services, repositories, actions and DTOs, plus a dynamic, preset-driven module generator.",
+    "description": "Build, enforce, analyze, and evolve Laravel architecture — generators, dependency graph, declarative layer rules, and lint baselines.",
     "keywords": [
         "laravel",
         "architecture",
+        "dependency-graph",
+        "lint",
         "service-layer",
         "repository",
         "actions",
         "dto",
         "generator",
-        "scaffolding"
+        "scaffolding",
+        "clean-architecture"
     ],
     "type": "library",
     "license": "MIT",
