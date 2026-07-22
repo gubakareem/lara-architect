@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
-use KarimAshraf\LaraArchitect\Support\BaseData;
+use KarimAshraf\LaraArchitect\Support\ArchitectData;
 
-final class PostData extends BaseData
+final class PostData extends ArchitectData
 {
     public function __construct(
         public readonly string $title,

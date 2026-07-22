@@ -3,9 +3,9 @@
 namespace {{ namespace }};
 
 use {{ modelClass }};
-use KarimAshraf\LaraArchitect\Actions\Action;
+use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
 
-class Delete{{ model }} extends Action
+class Delete{{ model }} extends ArchitectAction
 {
     protected function handle({{ model }} ${{ modelVariable }}): bool
     {

@@ -52,4 +52,10 @@ class EnumHelpersTest extends TestCase
             ReviewState::options(),
         );
     }
+
+    public function test_is_case_magic_methods(): void
+    {
+        $this->assertTrue(PostStatus::Draft->isDraft());
+        $this->assertFalse(PostStatus::Draft->isPublished());
+    }
 }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use KarimAshraf\LaraArchitect\Contracts\CrudService;
 use KarimAshraf\LaraArchitect\Contracts\Repository;
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
 /**
  * CRUD service layered on top of a repository. Write operations run inside a
@@ -22,7 +22,7 @@ use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
  *
  * @implements CrudService<TModel>
  */
-abstract class BaseService implements CrudService
+abstract class ArchitectService implements CrudService
 {
     /**
      * @param  Repository<TModel>  $repository
@@ -134,7 +134,7 @@ abstract class BaseService implements CrudService
         return $this->repository->trashed(['*'], $with);
     }
 
-    public function filter(QueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator
+    public function filter(ArchitectQueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator
     {
         return $this->repository->filter($filter, $perPage, $with);
     }

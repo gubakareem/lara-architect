@@ -9,7 +9,7 @@ use KarimAshraf\LaraArchitect\Tests\Fixtures\Post;
 use KarimAshraf\LaraArchitect\Tests\Fixtures\PostRepository;
 use KarimAshraf\LaraArchitect\Tests\TestCase;
 
-class BaseRepositoryTest extends TestCase
+class ArchitectRepositoryTest extends TestCase
 {
     use CreatesPostsTable;
 

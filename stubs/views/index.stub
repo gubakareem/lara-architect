@@ -1,0 +1,42 @@
+@php
+    /** @var \Illuminate\Pagination\LengthAwarePaginator ${{ pluralVariable }} */
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p><a href="{{ route('{{ routeName }}.create') }}">Create {{ model }}</a></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (${{ pluralVariable }} as ${{ modelVariable }})
+                <tr>
+                    <td>{{ ${{ modelVariable }}->getKey() }}</td>
+                    <td>
+                        <a href="{{ route('{{ routeName }}.show', ${{ modelVariable }}) }}">Show</a>
+                        <a href="{{ route('{{ routeName }}.edit', ${{ modelVariable }}) }}">Edit</a>
+                        <form action="{{ route('{{ routeName }}.destroy', ${{ modelVariable }}) }}" method="POST" style="display:inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{ ${{ pluralVariable }}->links() }}
+</body>
+</html>

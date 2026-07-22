@@ -7,9 +7,9 @@ namespace KarimAshraf\LaraArchitect\Generation;
 use Illuminate\Support\Str;
 
 /**
- * A single module field parsed from the --fields option, e.g. "price:decimal:nullable".
- * Knows how to express itself as a migration column, validation rule, cast,
- * factory definition and PHP type so generators stay declarative.
+ * A single module field parsed from the --fields option, e.g. "price:decimal:nullable"
+ * or "status:enum:int". Knows how to express itself as a migration column, validation
+ * rule, cast, factory definition and PHP type so generators stay declarative.
  */
 final class Field
 {
@@ -23,6 +23,7 @@ final class Field
         public readonly string $type = 'string',
         public readonly bool $nullable = false,
         public readonly bool $unique = false,
+        public readonly string $enumBacking = 'string',
     ) {}
 
     public static function isSupportedType(string $type): bool
@@ -37,7 +38,7 @@ final class Field
             'datetime' => 'dateTime',
             'foreignid' => 'foreignId',
             'decimal' => 'decimal',
-            'enum' => 'string',
+            'enum' => $this->isIntEnum() ? 'unsignedTinyInteger' : 'string',
             default => $this->type,
         };
 
@@ -103,7 +104,9 @@ final class Field
     public function factoryDefinition(): string
     {
         return match ($this->type) {
-            'enum' => "fake()->randomElement(['draft', 'active', 'archived'])",
+            'enum' => $this->isIntEnum()
+                ? 'fake()->randomElement([0, 1])'
+                : "fake()->randomElement(['draft', 'active', 'archived'])",
             'string' => 'fake()->words(3, true)',
             'uuid' => '(string) \\Illuminate\\Support\\Str::uuid()',
             'text' => 'fake()->paragraph()',
@@ -125,6 +128,7 @@ final class Field
             'boolean' => 'bool',
             'decimal', 'float' => 'float',
             'json' => 'array',
+            'enum' => $this->isIntEnum() ? 'int' : 'string',
             default => 'string',
         };
 
@@ -144,5 +148,32 @@ final class Field
     public function isEnum(): bool
     {
         return $this->type === 'enum';
+    }
+
+    public function isIntEnum(): bool
+    {
+        return $this->isEnum() && $this->enumBacking === 'int';
+    }
+
+    /**
+     * Default cases for a generated enum: string → Draft/Active/Archived,
+     * int → Inactive=0 / Active=1 (matching common status enums).
+     *
+     * @return list<array{name: string, value: string|int}>
+     */
+    public function enumCases(): array
+    {
+        if ($this->isIntEnum()) {
+            return [
+                ['name' => 'Inactive', 'value' => 0],
+                ['name' => 'Active', 'value' => 1],
+            ];
+        }
+
+        return [
+            ['name' => 'Draft', 'value' => 'draft'],
+            ['name' => 'Active', 'value' => 'active'],
+            ['name' => 'Archived', 'value' => 'archived'],
+        ];
     }
 }

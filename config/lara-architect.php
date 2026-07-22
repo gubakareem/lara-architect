@@ -14,6 +14,7 @@ use KarimAshraf\LaraArchitect\Generation\Generators\RepositoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\RequestsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ResourceGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ServiceGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\ViewsGenerator;
 
 return [
 
@@ -34,9 +35,18 @@ return [
         'default_architecture' => env('LARA_ARCHITECT_ARCHITECTURE', 'service-repository'),
 
         /*
+        | Default presentation layer for make:module:
+        | - api: JsonResource + controller under Http\Controllers\Api
+        | - web: Blade views + controller under Http\Controllers
+        | Override per command with --ui=api|web.
+        */
+        'default_ui' => env('LARA_ARCHITECT_UI', 'api'),
+
+        /*
         | Architecture presets. Each preset maps to the list of patterns that
         | will be generated for a module. Feel free to add your own preset,
         | e.g. 'cqrs' => ['model', 'migration', 'query', 'command', ...].
+        | The --ui option swaps "resource" ↔ "views" automatically.
         */
         'architectures' => [
             'service-repository' => [
@@ -69,12 +79,14 @@ return [
             'filter' => FilterGenerator::class,
             'requests' => RequestsGenerator::class,
             'resource' => ResourceGenerator::class,
+            'views' => ViewsGenerator::class,
             'controller' => ControllerGenerator::class,
         ],
 
         /*
         | Target namespaces per generated class type. Paths are derived from
         | these namespaces (App\ => app/, Database\ => database/).
+        | "controller_api" is used when --ui=api (falls back to controller\Api).
         */
         'namespaces' => [
             'model' => 'App\\Models',
@@ -85,10 +97,28 @@ return [
             'enum' => 'App\\Enums',
             'filter' => 'App\\Http\\Filters',
             'controller' => 'App\\Http\\Controllers',
+            'controller_api' => 'App\\Http\\Controllers\\Api',
             'request' => 'App\\Http\\Requests',
             'resource' => 'App\\Http\\Resources',
             'factory' => 'Database\\Factories',
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enums
+    |--------------------------------------------------------------------------
+    |
+    | Locales for which lang/{locale}/enums.php translation maps are generated
+    | alongside enum classes. Labels resolve via EnumHelpers::label().
+    |
+    */
+
+    'enums' => [
+        'locales' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('LARA_ARCHITECT_ENUM_LOCALES', 'en,ar')),
+        ))),
     ],
 
     /*
@@ -112,12 +142,12 @@ return [
     */
 
     'services' => [
-        // Wrap write operations of BaseService in a database transaction.
+        // Wrap write operations of ArchitectService in a database transaction.
         'transactions' => true,
     ],
 
     'actions' => [
-        // Wrap Action::execute() in a database transaction by default.
+        // Wrap ArchitectAction::execute() in a database transaction by default.
         'transactions' => true,
     ],
 
@@ -126,7 +156,7 @@ return [
     | JSON Response Envelope
     |--------------------------------------------------------------------------
     |
-    | Keys used by the RespondsWithJson trait and BaseFormRequest when
+    | Keys used by the RespondsWithJson trait and ArchitectFormRequest when
     | building JSON responses, so the envelope matches your API style.
     |
     */

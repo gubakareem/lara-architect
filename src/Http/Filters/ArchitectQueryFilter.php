@@ -15,7 +15,7 @@ use ReflectionMethod;
  * filter: when the request contains a query parameter with the same name
  * (snake_case maps to camelCase), the method is called with its value.
  *
- *     class ProductFilter extends QueryFilter
+ *     class ProductFilter extends ArchitectQueryFilter
  *     {
  *         public function search(string $value): void
  *         {
@@ -33,7 +33,7 @@ use ReflectionMethod;
  *     // GET /products?search=desk&price_min=100
  *     Product::filter($filter)->paginate();
  */
-abstract class QueryFilter
+abstract class ArchitectQueryFilter
 {
     /** @var Builder<covariant Model> */
     protected Builder $builder;

@@ -6,12 +6,12 @@ namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use KarimAshraf\LaraArchitect\Services\BaseService;
+use KarimAshraf\LaraArchitect\Services\ArchitectService;
 
 /**
- * @extends BaseService<Post>
+ * @extends ArchitectService<Post>
  */
-class PostService extends BaseService
+class PostService extends ArchitectService
 {
     /** @var list<string> */
     public array $events = [];

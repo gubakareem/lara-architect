@@ -10,13 +10,16 @@ use InvalidArgumentException;
 /**
  * Parses the --fields option syntax:
  *
- *     name:string:required, price:decimal:nullable, sku:string:unique
+ *     name:string, price:decimal:nullable, status:enum:int, sku:string:unique
  *
- * Segments after the type are modifiers (nullable, unique, required).
+ * Segments after the type are modifiers (nullable, unique, required) or, for
+ * enum fields, a backing type (string|int — defaults to string).
  */
 final class FieldParser
 {
     private const MODIFIERS = ['nullable', 'unique', 'required'];
+
+    private const ENUM_BACKINGS = ['string', 'int'];
 
     /**
      * @return list<Field>
@@ -44,12 +47,19 @@ final class FieldParser
         $name = Str::snake($parts[0]);
         $type = 'string';
         $modifiers = [];
+        $enumBacking = 'string';
 
         foreach (array_slice($parts, 1) as $part) {
             $lower = strtolower($part);
 
             if (in_array($lower, self::MODIFIERS, true)) {
                 $modifiers[] = $lower;
+
+                continue;
+            }
+
+            if (in_array($lower, self::ENUM_BACKINGS, true)) {
+                $enumBacking = $lower;
 
                 continue;
             }
@@ -65,11 +75,20 @@ final class FieldParser
             $type = $lower;
         }
 
+        if ($enumBacking !== 'string' && $type !== 'enum') {
+            throw new InvalidArgumentException(sprintf(
+                'Backing type [%s] is only valid for enum fields (field [%s]).',
+                $enumBacking,
+                $name,
+            ));
+        }
+
         return new Field(
             name: $name,
             type: $type,
             nullable: in_array('nullable', $modifiers, true),
             unique: in_array('unique', $modifiers, true),
+            enumBacking: $type === 'enum' ? $enumBacking : 'string',
         );
     }
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create {{ model }}</title>
+</head>
+<body>
+    <h1>Create {{ model }}</h1>
+
+    @if ($errors->any())
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    @endif
+
+    <form action="{{ route('{{ routeName }}.store') }}" method="POST">
+        @csrf
+        {{-- Add your form fields here --}}
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>

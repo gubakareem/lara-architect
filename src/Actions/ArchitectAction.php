@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Usage:
  *
- *     class PublishPost extends Action
+ *     class PublishPost extends ArchitectAction
  *     {
  *         protected function handle(Post $post): Post { ... }
  *     }
@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @method mixed handle(mixed ...$arguments)
  */
-abstract class Action
+abstract class ArchitectAction
 {
     /**
      * Whether execute() should run inside a database transaction.

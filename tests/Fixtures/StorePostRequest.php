@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
-use KarimAshraf\LaraArchitect\Http\Requests\BaseFormRequest;
+use KarimAshraf\LaraArchitect\Http\Requests\ArchitectFormRequest;
 
-class StorePostRequest extends BaseFormRequest
+class StorePostRequest extends ArchitectFormRequest
 {
     public function rules(): array
     {

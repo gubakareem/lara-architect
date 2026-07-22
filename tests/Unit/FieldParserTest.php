@@ -56,8 +56,22 @@ class FieldParserTest extends TestCase
         $fields = FieldParser::parse('status:enum:nullable');
 
         $this->assertTrue($fields[0]->isEnum());
+        $this->assertSame('string', $fields[0]->enumBacking);
         $this->assertSame("\$table->string('status')->nullable();", $fields[0]->migrationColumn());
         $this->assertSame(['nullable'], $fields[0]->validationRules());
+    }
+
+    public function test_int_backed_enum_fields_are_supported(): void
+    {
+        $fields = FieldParser::parse('status:enum:int:nullable');
+
+        $this->assertTrue($fields[0]->isIntEnum());
+        $this->assertSame('int', $fields[0]->enumBacking);
+        $this->assertSame("\$table->unsignedTinyInteger('status')->nullable();", $fields[0]->migrationColumn());
+        $this->assertSame([
+            ['name' => 'Inactive', 'value' => 0],
+            ['name' => 'Active', 'value' => 1],
+        ], $fields[0]->enumCases());
     }
 
     public function test_field_produces_migration_column_and_rules(): void

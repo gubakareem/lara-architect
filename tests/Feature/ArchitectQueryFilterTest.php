@@ -11,7 +11,7 @@ use KarimAshraf\LaraArchitect\Tests\Fixtures\PostFilter;
 use KarimAshraf\LaraArchitect\Tests\Fixtures\PostRepository;
 use KarimAshraf\LaraArchitect\Tests\TestCase;
 
-class QueryFilterTest extends TestCase
+class ArchitectQueryFilterTest extends TestCase
 {
     use CreatesPostsTable;
 
@@ -45,7 +45,7 @@ class QueryFilterTest extends TestCase
 
     public function test_base_class_methods_cannot_be_invoked_as_filters(): void
     {
-        // ?apply=x and ?filters=x must not call QueryFilter internals.
+        // ?apply=x and ?filters=x must not call ArchitectQueryFilter internals.
         $filter = new PostFilter(Request::create('/posts?apply=x&filters=x'));
 
         $this->assertCount(3, $filter->apply(Post::query())->get());

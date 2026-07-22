@@ -3,12 +3,12 @@
 namespace {{ namespace }};
 
 use {{ modelClass }};
-use KarimAshraf\LaraArchitect\Database\BaseRepository;
+use KarimAshraf\LaraArchitect\Database\ArchitectRepository;
 
 /**
- * @extends BaseRepository<{{ model }}>
+ * @extends ArchitectRepository<{{ model }}>
  */
-class {{ model }}Repository extends BaseRepository
+class {{ model }}Repository extends ArchitectRepository
 {
     protected function model(): string
     {

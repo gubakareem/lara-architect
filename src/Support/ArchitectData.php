@@ -17,7 +17,7 @@ use ReflectionParameter;
  * matching constructor promoted properties (snake_case keys are mapped to
  * camelCase parameters automatically).
  *
- *     final class ProductData extends BaseData
+ *     final class ProductData extends ArchitectData
  *     {
  *         public function __construct(
  *             public readonly string $name,
@@ -28,7 +28,7 @@ use ReflectionParameter;
  *
  *     $data = ProductData::fromArray($request->validated());
  */
-abstract class BaseData implements DataTransferObject
+abstract class ArchitectData implements DataTransferObject
 {
     public static function fromArray(array $data): static
     {

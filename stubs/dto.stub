@@ -2,9 +2,9 @@
 
 namespace {{ namespace }};
 
-{{ imports }}use KarimAshraf\LaraArchitect\Support\BaseData;
+{{ imports }}use KarimAshraf\LaraArchitect\Support\ArchitectData;
 
-final class {{ model }}Data extends BaseData
+final class {{ model }}Data extends ArchitectData
 {
     public function __construct(
 {{ properties }}

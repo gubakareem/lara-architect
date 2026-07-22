@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
-use KarimAshraf\LaraArchitect\Database\BaseRepository;
+use KarimAshraf\LaraArchitect\Database\ArchitectRepository;
 
 /**
- * @extends BaseRepository<Post>
+ * @extends ArchitectRepository<Post>
  */
-class PostRepository extends BaseRepository
+class PostRepository extends ArchitectRepository
 {
     protected function model(): string
     {

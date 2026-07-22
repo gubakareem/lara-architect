@@ -8,31 +8,33 @@ use InvalidArgumentException;
 use KarimAshraf\LaraArchitect\Generation\ModuleBlueprint;
 
 /**
- * Generates the API controller. The controller style follows the module's
- * patterns: it delegates to a service when one is generated, to actions when
- * those are generated, and falls back to plain Eloquent otherwise.
+ * Generates the module controller. Style follows the collaborator patterns
+ * (service / actions / plain) and the presentation layer (api → JsonResource
+ * + RespondsWithJson; web → Blade views + redirects).
  */
 class ControllerGenerator extends BaseGenerator
 {
     public function generate(ModuleBlueprint $blueprint): array
     {
-        if (! $blueprint->hasPattern('resource')) {
+        if ($blueprint->isApi() && ! $blueprint->hasPattern('resource')) {
             throw new InvalidArgumentException(
-                'The [controller] pattern requires the [resource] pattern. Add "resource" to the pattern list.',
+                'API controllers require the [resource] pattern. Add "resource" or use --ui=web.',
             );
         }
 
-        $stub = match (true) {
-            $blueprint->hasPattern('service') => 'controllers/service',
-            $blueprint->hasPattern('actions') => 'controllers/actions',
-            default => 'controllers/plain',
-        };
+        if ($blueprint->isWeb() && ! $blueprint->hasPattern('views')) {
+            throw new InvalidArgumentException(
+                'Web controllers require the [views] pattern. Add "views" or use --ui=api.',
+            );
+        }
 
+        $stub = $this->resolveStub($blueprint);
         $requests = $this->requestReplacements($blueprint);
 
         $contents = $this->stubs->render($stub, [
             ...$this->baseReplacements($blueprint),
             'namespace' => $blueprint->namespaceFor('controller'),
+            'viewPath' => $blueprint->viewPath(),
             ...$requests,
             ...$this->collaboratorReplacements($blueprint, $requests),
             ...$this->indexReplacements($blueprint),
@@ -49,6 +51,19 @@ class ControllerGenerator extends BaseGenerator
         ];
     }
 
+    private function resolveStub(ModuleBlueprint $blueprint): string
+    {
+        $style = match (true) {
+            $blueprint->hasPattern('service') => 'service',
+            $blueprint->hasPattern('actions') => 'actions',
+            default => 'plain',
+        };
+
+        return $blueprint->isWeb()
+            ? 'controllers/web/'.$style
+            : 'controllers/'.$style;
+    }
+
     /**
      * @return array<string, string>
      */
@@ -57,7 +72,6 @@ class ControllerGenerator extends BaseGenerator
         $model = $blueprint->model();
 
         if (! $blueprint->hasPattern('requests')) {
-            // No form requests generated: accept the base request and pass everything through.
             return [
                 'requestImports' => "use Illuminate\\Http\\Request;\n",
                 'storeRequest' => 'Request',
@@ -82,9 +96,6 @@ class ControllerGenerator extends BaseGenerator
     }
 
     /**
-     * The index() signature and query change when the module has a filter:
-     * the generated QueryFilter is injected and applied to the listing.
-     *
      * @return array<string, string>
      */
     private function indexReplacements(ModuleBlueprint $blueprint): array

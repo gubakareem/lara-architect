@@ -2,9 +2,9 @@
 
 namespace {{ namespace }};
 
-{{ imports }}use KarimAshraf\LaraArchitect\Http\Requests\BaseFormRequest;
+{{ imports }}use KarimAshraf\LaraArchitect\Http\Requests\ArchitectFormRequest;
 
-class Update{{ model }}Request extends BaseFormRequest
+class Update{{ model }}Request extends ArchitectFormRequest
 {
     /**
      * @return array<string, mixed>

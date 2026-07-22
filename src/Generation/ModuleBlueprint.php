@@ -8,11 +8,16 @@ use Illuminate\Support\Str;
 
 /**
  * Immutable description of the module being generated: its name, fields,
- * architecture and the namespaces every generated class should live in.
- * Generators read from the blueprint instead of re-deriving names.
+ * architecture, presentation layer (api|web) and the namespaces every
+ * generated class should live in. Generators read from the blueprint
+ * instead of re-deriving names.
  */
 final class ModuleBlueprint
 {
+    public const PRESENTATION_API = 'api';
+
+    public const PRESENTATION_WEB = 'web';
+
     /**
      * @param  list<Field>  $fields
      * @param  list<string>  $patterns
@@ -26,7 +31,18 @@ final class ModuleBlueprint
         public readonly array $namespaces,
         public readonly bool $usesUuid = true,
         public readonly bool $usesSoftDeletes = true,
+        public readonly string $presentation = self::PRESENTATION_API,
     ) {}
+
+    public function isApi(): bool
+    {
+        return $this->presentation === self::PRESENTATION_API;
+    }
+
+    public function isWeb(): bool
+    {
+        return $this->presentation === self::PRESENTATION_WEB;
+    }
 
     public function model(): string
     {
@@ -51,6 +67,11 @@ final class ModuleBlueprint
     public function routeName(): string
     {
         return Str::kebab($this->pluralModel());
+    }
+
+    public function viewPath(): string
+    {
+        return Str::snake($this->pluralModel());
     }
 
     public function namespaceFor(string $type): string

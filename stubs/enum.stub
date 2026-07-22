@@ -4,15 +4,14 @@ namespace {{ namespace }};
 
 use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;
 
-enum {{ class }}: string
+{{ methodDocs }}
+enum {{ class }}: {{ backing }}
 {
     /**
-     * Provides values(), options(), label(), is() and isNot().
-     * Override any of them by redeclaring the method here.
+     * Provides values(), options(), label() (via lang/enums.php), is(), isNot()
+     * and is{Case}() helpers. Override any of them by redeclaring the method here.
      */
     use EnumHelpers;
 
-    case Draft = 'draft';
-    case Active = 'active';
-    case Archived = 'archived';
+{{ cases }}
 }

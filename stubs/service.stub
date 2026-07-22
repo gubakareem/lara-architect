@@ -3,12 +3,12 @@
 namespace {{ namespace }};
 
 use {{ repositoryClass }};
-use KarimAshraf\LaraArchitect\Services\BaseService;
+use KarimAshraf\LaraArchitect\Services\ArchitectService;
 
 /**
- * @extends BaseService<{{ model }}>
+ * @extends ArchitectService<{{ model }}>
  */
-class {{ model }}Service extends BaseService
+class {{ model }}Service extends ArchitectService
 {
     public function __construct({{ model }}Repository $repository)
     {

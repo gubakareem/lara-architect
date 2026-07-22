@@ -53,13 +53,19 @@ Published stubs live in `stubs/lara-architect/` and always win over the package 
 php artisan architect:patterns
 ```
 
-**2.** Generate a module (add `--dry-run` first to preview without writing):
+**2.** Generate a module (add `--dry-run` first to preview without writing). Default is **API** (JsonResource + `Http\Controllers\Api`). Use `--ui=web` for Blade:
 
 ```bash
+# API (default) — controller under App\Http\Controllers\Api + ProductResource
 php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum"
+
+# Web / Blade — views + controller under App\Http\Controllers (no API resource)
+php artisan make:module Product --ui=web --fields="name:string, price:decimal, status:enum:int"
 ```
 
-This creates the model (with soft deletes, UUID and filtering), migration, factory, `ProductStatus` enum, repository, service, query filter, store/update form requests, API resource and controller — all wired together and consistent with your `--fields`.
+This creates the model (with soft deletes, UUID and filtering), migration, factory, enum (+ `lang/*/enums.php` translations), repository, service, query filter, store/update form requests, and either an API resource + Api controller **or** Blade views + web controller — all wired together and consistent with your `--fields`.
+
+Int-backed enums: `status:enum:int` → `enum ProductStatus: int` with `Inactive=0` / `Active=1`. String enums: `status:enum` (default).
 
 **3.** Run the migration:
 
@@ -67,10 +73,14 @@ This creates the model (with soft deletes, UUID and filtering), migration, facto
 php artisan migrate
 ```
 
-**4.** Register the routes in `routes/api.php` (the command prints this for you):
+**4.** Register the routes in `routes/api.php` (API) or `routes/web.php` (web) — the command prints the exact line:
 
 ```php
-Route::apiResource('products', \App\Http\Controllers\ProductController::class);
+// --ui=api (default)
+Route::apiResource('products', \App\Http\Controllers\Api\ProductController::class);
+
+// --ui=web
+Route::resource('products', \App\Http\Controllers\ProductController::class);
 ```
 
 **5.** Use the API:
@@ -116,6 +126,8 @@ Other useful flags:
 
 | Flag | Effect |
 | --- | --- |
+| `--ui=api` | JsonResource + controller in `Http\Controllers\Api` (default) |
+| `--ui=web` | Blade views + web controller (no API resource) |
 | `--dry-run` | Preview every file that would be generated, write nothing |
 | `--force` | Overwrite existing files (they are skipped by default) |
 | `--no-uuid` | Skip the `uuid` column + `HasUuid` trait |
@@ -135,22 +147,22 @@ php artisan architect:patterns
 name:string, price:decimal, sku:string:unique, published_at:datetime:nullable, meta:json:nullable
 ```
 
-Supported types: `string`, `text`, `integer`, `biginteger`, `boolean`, `decimal`, `float`, `date`, `datetime`, `json`, `uuid`, `foreignid`, `enum`. Modifiers: `nullable`, `unique`.
+Supported types: `string`, `text`, `integer`, `biginteger`, `boolean`, `decimal`, `float`, `date`, `datetime`, `json`, `uuid`, `foreignid`, `enum`. Modifiers: `nullable`, `unique`. For enums, add a backing type: `status:enum` (string) or `status:enum:int` (integer).
 
 A unique field automatically gets `Rule::unique(...)` in the store request and `Rule::unique(...)->ignore($this->route(...))` in the update request.
 
 ### Enum fields
 
-Declare a field as `enum` (e.g. `status:enum`) and, with the `enum` pattern enabled, the generator produces a string-backed enum class (`App\Enums\ProductStatus`) that uses the package's `EnumHelpers` trait — giving it `values()`, `options()`, `label()`, `is()` and `isNot()` without any boilerplate. Override any helper by redeclaring it on the enum (e.g. a translated `label()`). The enum is wired through the whole module:
+Declare a field as `enum` (e.g. `status:enum`) or int-backed `status:enum:int`. With the `enum` pattern enabled, the generator produces a backed enum (`App\Enums\ProductStatus`) that uses `EnumHelpers` — `values()`, `options()`, translated `label()`, `is()` / `isNot()`, and magic `isActive()`-style helpers. It also writes `lang/{locale}/enums.php` maps (default locales `en` and `ar`, configurable via `LARA_ARCHITECT_ENUM_LOCALES`). Override any helper by redeclaring it on the enum. The enum is wired through the whole module:
 
 - the model casts the attribute to the enum (`'status' => ProductStatus::class`)
 - the form requests validate it with `Rule::enum(ProductStatus::class)`
 - the factory uses `fake()->randomElement(ProductStatus::cases())`
-- the DTO property is typed with the enum, and `BaseData` hydrates it from strings
+- the DTO property is typed with the enum, and `ArchitectData` hydrates it from strings
 
 ### Query filters
 
-Every preset includes the `filter` pattern: a `ProductFilter` class (extending `QueryFilter`) is generated with a `search()` method across text fields, exact matches for booleans/integers/enums, and `_min`/`_max` (numeric) or `_from`/`_to` (date) range methods. The generated model gets the `Filterable` trait and the controller's `index()` injects the filter:
+Every preset includes the `filter` pattern: a `ProductFilter` class (extending `ArchitectQueryFilter`) is generated with a `search()` method across text fields, exact matches for booleans/integers/enums, and `_min`/`_max` (numeric) or `_from`/`_to` (date) range methods. The generated model gets the `Filterable` trait and the controller's `index()` injects the filter:
 
 ```
 GET /products?search=desk&price_min=100&status=active&created_at_from=2026-01-01
@@ -186,12 +198,12 @@ php artisan make:module Invoice --architecture=my-team-style
 ### Repository
 
 ```php
-use KarimAshraf\LaraArchitect\Database\BaseRepository;
+use KarimAshraf\LaraArchitect\Database\ArchitectRepository;
 
 /**
- * @extends BaseRepository<Product>
+ * @extends ArchitectRepository<Product>
  */
-class ProductRepository extends BaseRepository
+class ProductRepository extends ArchitectRepository
 {
     protected function model(): string
     {
@@ -224,12 +236,12 @@ Restore operations throw a descriptive `SoftDeletesNotEnabledException` when the
 ### Service
 
 ```php
-use KarimAshraf\LaraArchitect\Services\BaseService;
+use KarimAshraf\LaraArchitect\Services\ArchitectService;
 
 /**
- * @extends BaseService<Product>
+ * @extends ArchitectService<Product>
  */
-class ProductService extends BaseService
+class ProductService extends ArchitectService
 {
     public function __construct(ProductRepository $repository)
     {
@@ -255,9 +267,9 @@ Write operations run inside a database transaction (disable via `lara-architect.
 ### Actions
 
 ```php
-use KarimAshraf\LaraArchitect\Actions\Action;
+use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
 
-class PublishPost extends Action
+class PublishPost extends ArchitectAction
 {
     protected function handle(Post $post): Post
     {
@@ -274,9 +286,9 @@ PublishPost::run($post);
 ### Query filters
 
 ```php
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
-class ProductFilter extends QueryFilter
+class ProductFilter extends ArchitectQueryFilter
 {
     public function search(string $value): void
     {
@@ -303,9 +315,9 @@ $service->filter($filter);                     // via the service
 ### Data transfer objects
 
 ```php
-use KarimAshraf\LaraArchitect\Support\BaseData;
+use KarimAshraf\LaraArchitect\Support\ArchitectData;
 
-final class ProductData extends BaseData
+final class ProductData extends ArchitectData
 {
     public function __construct(
         public readonly string $name,
@@ -320,12 +332,12 @@ $data->toArray();          // snake_case keys
 $data->toFilteredArray();  // nulls removed — great for partial updates
 ```
 
-Snake_case input keys map to camelCase constructor parameters automatically, nested `BaseData` types are hydrated recursively, and backed enums are hydrated from their raw values (`'status' => 'active'` becomes `ProductStatus::Active`).
+Snake_case input keys map to camelCase constructor parameters automatically, nested `ArchitectData` types are hydrated recursively, and backed enums are hydrated from their raw values (`'status' => 'active'` becomes `ProductStatus::Active`).
 
 ### Form requests and JSON responses
 
 ```php
-class StoreProductRequest extends BaseFormRequest
+class StoreProductRequest extends ArchitectFormRequest
 {
     public function rules(): array
     {

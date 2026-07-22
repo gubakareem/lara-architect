@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
  * Form request base with a consistent JSON error envelope and a couple of
  * conveniences for merging extra data into the validated payload.
  */
-abstract class BaseFormRequest extends FormRequest
+abstract class ArchitectFormRequest extends FormRequest
 {
     public function authorize(): bool
     {

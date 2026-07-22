@@ -7,7 +7,7 @@ namespace KarimAshraf\LaraArchitect\Tests\Feature;
 use KarimAshraf\LaraArchitect\Tests\Fixtures\StorePostRequest;
 use KarimAshraf\LaraArchitect\Tests\TestCase;
 
-class BaseFormRequestTest extends TestCase
+class ArchitectFormRequestTest extends TestCase
 {
     protected function defineRoutes($router): void
     {

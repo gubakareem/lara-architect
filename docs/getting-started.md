@@ -28,6 +28,13 @@ This lists the available **architecture presets** and the individual **patterns*
 
 ## 3. Generate your first CRUD module
 
+Choose the presentation layer with `--ui`:
+
+| `--ui` | Controllers | Responses | Also generates |
+| --- | --- | --- | --- |
+| `api` (default) | `App\Http\Controllers\Api` | JsonResource + JSON envelope | `ProductResource` |
+| `web` | `App\Http\Controllers` | Blade views + redirects | `resources/views/products/*` |
+
 Preview first — `--dry-run` shows every file that would be created without writing anything:
 
 ```bash
@@ -37,29 +44,46 @@ php artisan make:module Product --fields="name:string, price:decimal, sku:string
 Happy with the list? Run it for real:
 
 ```bash
+# API module (default)
 php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum, notes:text:nullable"
+
+# Blade / web module
+php artisan make:module Product --ui=web --fields="name:string, price:decimal, status:enum:int"
 ```
 
-With the default `service-repository` preset you get:
+With the default `service-repository` + `api` preset you get:
 
 ```
 app/
-├── Models/Product.php                          # SoftDeletes, HasUuid, Filterable, casts, fillable
-├── Enums/ProductStatus.php                     # string-backed enum for the status field
-├── Repositories/ProductRepository.php          # extends BaseRepository<Product>
-├── Services/ProductService.php                 # extends BaseService<Product>, injects the repository
+├── Models/Product.php
+├── Enums/ProductStatus.php                     # EnumHelpers + isActive()-style helpers
+├── Repositories/ProductRepository.php
+├── Services/ProductService.php
 └── Http/
-    ├── Controllers/ProductController.php       # index/store/show/update/destroy wired to the service
-    ├── Filters/ProductFilter.php               # search, exact, range and date-range filters
-    ├── Requests/Products/StoreProductRequest.php
-    ├── Requests/Products/UpdateProductRequest.php
+    ├── Controllers/Api/ProductController.php   # API namespace
+    ├── Filters/ProductFilter.php
+    ├── Requests/Products/...
     └── Resources/ProductResource.php
+lang/
+├── en/enums.php                                # ProductStatus::class => value => label
+└── ar/enums.php                                # Arabic defaults for common statuses
 database/
 ├── factories/ProductFactory.php
-└── migrations/xxxx_xx_xx_xxxxxx_create_products_table.php
+└── migrations/xxxx_create_products_table.php
 ```
 
-Everything is derived from `--fields`: the migration columns, validation rules, model casts, factory definitions, filter methods and the resource — all consistent with each other.
+With `--ui=web`, `Resources` is skipped and you get `Http/Controllers/ProductController.php` plus `resources/views/products/{index,create,show,edit}.blade.php` instead.
+
+**Enum field syntax**
+
+```
+status:enum          # string-backed: Draft/Active/Archived
+status:enum:int      # int-backed: Inactive=0, Active=1 (unsignedTinyInteger column)
+```
+
+Labels come from `lang/{locale}/enums.php` via `EnumHelpers::label()`. Set locales with `LARA_ARCHITECT_ENUM_LOCALES=en,ar` or `config/lara-architect.php` → `enums.locales`.
+
+Everything else is derived from `--fields`: the migration columns, validation rules, model casts, factory definitions, filter methods and the resource — all consistent with each other.
 
 ## 4. Migrate and register routes
 
@@ -67,12 +91,16 @@ Everything is derived from `--fields`: the migration columns, validation rules, 
 php artisan migrate
 ```
 
-Then add the resource routes in `routes/api.php`:
+Then add the resource routes — API vs web:
 
 ```php
-use App\Http\Controllers\ProductController;
-
+// routes/api.php  (--ui=api, default)
+use App\Http\Controllers\Api\ProductController;
 Route::apiResource('products', ProductController::class);
+
+// routes/web.php  (--ui=web)
+use App\Http\Controllers\ProductController;
+Route::resource('products', ProductController::class);
 ```
 
 (The command prints this exact line as a "next step" after generating.)
@@ -247,9 +275,9 @@ namespace App\Actions\Orders;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
-use KarimAshraf\LaraArchitect\Actions\Action;
+use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
 
-class MarkOrderPaid extends Action
+class MarkOrderPaid extends ArchitectAction
 {
     protected function handle(Order $order): Order
     {
@@ -401,38 +429,38 @@ public function featured(string $value): void
 }
 ```
 
-### Enums (`EnumHelpers`)
+### Enums (`EnumHelpers` + translations)
 
-Generated enums use the package trait. Override any helper by redeclaring it:
+```bash
+php artisan make:module Product --fields="status:enum"       # string
+php artisan make:module Branch --fields="status:enum:int"    # int 0/1
+```
+
+Generated `lang/en/enums.php` (and `ar`, etc.):
 
 ```php
-namespace App\Enums;
+use App\Enums\ProductStatus;
 
-use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;
+return [
+    ProductStatus::class => [
+        ProductStatus::Draft->value => 'Draft',
+        ProductStatus::Active->value => 'Active',
+        ProductStatus::Archived->value => 'Archived',
+    ],
+];
+```
 
-enum ProductStatus: string
-{
-    use EnumHelpers;
-
-    case Draft = 'draft';
-    case Active = 'active';
-    case Archived = 'archived';
-
-    public function label(): string
-    {
-        return __("products.status.{$this->value}");
-    }
-}
-
-ProductStatus::values();                    // ['draft', 'active', 'archived']
-ProductStatus::options();                   // value => label (uses your label())
-ProductStatus::Active->is(ProductStatus::Active);
+```php
+ProductStatus::Active->label();     // from lang file, or headline fallback
+ProductStatus::Active->isActive();  // true
+ProductStatus::values();
+ProductStatus::options();           // value => label (for selects)
 ```
 
 ### Form requests + JSON responses
 
 ```php
-class StoreProductRequest extends BaseFormRequest
+class StoreProductRequest extends ArchitectFormRequest
 {
     public function rules(): array
     {

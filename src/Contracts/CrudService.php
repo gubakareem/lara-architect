@@ -7,7 +7,7 @@ namespace KarimAshraf\LaraArchitect\Contracts;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
 /**
  * @template TModel of Model
@@ -74,7 +74,7 @@ interface CrudService
      */
     public function trashed(array $with = []): Collection;
 
-    public function filter(QueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator;
+    public function filter(ArchitectQueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator;
 
     /**
      * @return Repository<TModel>

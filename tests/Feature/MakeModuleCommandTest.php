@@ -19,8 +19,12 @@ class MakeModuleCommandTest extends TestCase
         File::deleteDirectory(app_path('Enums'));
         File::deleteDirectory(app_path('Http/Filters'));
         File::deleteDirectory(app_path('Http/Requests/Products'));
-        File::delete(app_path('Http/Resources/ProductResource.php'));
+        File::deleteDirectory(app_path('Http/Controllers/Api'));
         File::delete(app_path('Http/Controllers/ProductController.php'));
+        File::delete(app_path('Http/Resources/ProductResource.php'));
+        File::deleteDirectory(resource_path('views/products'));
+        File::delete(lang_path('en/enums.php'));
+        File::delete(lang_path('ar/enums.php'));
         File::delete(database_path('factories/ProductFactory.php'));
 
         foreach (File::glob(database_path('migrations/*_create_products_table.php')) as $migration) {
@@ -43,7 +47,7 @@ class MakeModuleCommandTest extends TestCase
         $this->assertFileExists(app_path('Http/Requests/Products/StoreProductRequest.php'));
         $this->assertFileExists(app_path('Http/Requests/Products/UpdateProductRequest.php'));
         $this->assertFileExists(app_path('Http/Resources/ProductResource.php'));
-        $this->assertFileExists(app_path('Http/Controllers/ProductController.php'));
+        $this->assertFileExists(app_path('Http/Controllers/Api/ProductController.php'));
         $this->assertFileExists(database_path('factories/ProductFactory.php'));
         $this->assertNotEmpty(File::glob(database_path('migrations/*_create_products_table.php')));
 
@@ -57,9 +61,12 @@ class MakeModuleCommandTest extends TestCase
         $this->assertStringContainsString('public function search(string $value): void', $filter);
         $this->assertStringContainsString('public function priceMin(string $value): void', $filter);
 
-        $controllerSource = File::get(app_path('Http/Controllers/ProductController.php'));
+        $controllerSource = File::get(app_path('Http/Controllers/Api/ProductController.php'));
+        $this->assertStringContainsString('namespace App\Http\Controllers\Api;', $controllerSource);
         $this->assertStringContainsString('public function index(ProductFilter $filter)', $controllerSource);
         $this->assertStringContainsString('$this->productService->filter($filter', $controllerSource);
+        $this->assertStringContainsString('ProductService $productService', $controllerSource);
+        $this->assertStringContainsString('RespondsWithJson', $controllerSource);
 
         $storeRequest = File::get(app_path('Http/Requests/Products/StoreProductRequest.php'));
         $this->assertStringContainsString("Rule::unique('products', 'sku')", $storeRequest);
@@ -67,13 +74,38 @@ class MakeModuleCommandTest extends TestCase
         $updateRequest = File::get(app_path('Http/Requests/Products/UpdateProductRequest.php'));
         $this->assertStringContainsString("->ignore(\$this->route('product'))", $updateRequest);
 
-        $controller = File::get(app_path('Http/Controllers/ProductController.php'));
-        $this->assertStringContainsString('ProductService $productService', $controller);
-
         $this->assertGeneratedPhpIsValid([
             app_path('Models/Product.php'),
             app_path('Repositories/ProductRepository.php'),
             app_path('Services/ProductService.php'),
+            app_path('Http/Controllers/Api/ProductController.php'),
+        ]);
+    }
+
+    public function test_it_generates_a_web_module_with_blade_views(): void
+    {
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--ui' => 'web',
+            '--fields' => 'name:string, price:decimal',
+        ])->assertExitCode(0);
+
+        $this->assertFileDoesNotExist(app_path('Http/Resources/ProductResource.php'));
+        $this->assertFileDoesNotExist(app_path('Http/Controllers/Api/ProductController.php'));
+        $this->assertFileExists(app_path('Http/Controllers/ProductController.php'));
+        $this->assertFileExists(resource_path('views/products/index.blade.php'));
+        $this->assertFileExists(resource_path('views/products/create.blade.php'));
+        $this->assertFileExists(resource_path('views/products/show.blade.php'));
+        $this->assertFileExists(resource_path('views/products/edit.blade.php'));
+
+        $controller = File::get(app_path('Http/Controllers/ProductController.php'));
+        $this->assertStringContainsString('namespace App\Http\Controllers;', $controller);
+        $this->assertStringContainsString("view('products.index'", $controller);
+        $this->assertStringContainsString('RedirectResponse', $controller);
+        $this->assertStringNotContainsString('RespondsWithJson', $controller);
+        $this->assertStringNotContainsString('ProductResource', $controller);
+
+        $this->assertGeneratedPhpIsValid([
             app_path('Http/Controllers/ProductController.php'),
         ]);
     }
@@ -94,7 +126,7 @@ class MakeModuleCommandTest extends TestCase
         $createAction = File::get(app_path('Actions/Products/CreateProduct.php'));
         $this->assertStringContainsString('handle(ProductData $data): Product', $createAction);
 
-        $controller = File::get(app_path('Http/Controllers/ProductController.php'));
+        $controller = File::get(app_path('Http/Controllers/Api/ProductController.php'));
         $this->assertStringContainsString('CreateProduct::run(ProductData::fromRequest($request))', $controller);
     }
 
@@ -106,11 +138,23 @@ class MakeModuleCommandTest extends TestCase
         ])->assertExitCode(0);
 
         $this->assertFileExists(app_path('Enums/ProductStatus.php'));
+        $this->assertFileExists(lang_path('en/enums.php'));
+        $this->assertFileExists(lang_path('ar/enums.php'));
 
         $enum = File::get(app_path('Enums/ProductStatus.php'));
         $this->assertStringContainsString('enum ProductStatus: string', $enum);
         $this->assertStringContainsString('use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;', $enum);
         $this->assertStringContainsString('use EnumHelpers;', $enum);
+        $this->assertStringContainsString('@method bool isActive()', $enum);
+        $this->assertStringContainsString("case Draft = 'draft';", $enum);
+
+        $en = File::get(lang_path('en/enums.php'));
+        $this->assertStringContainsString('use App\Enums\ProductStatus;', $en);
+        $this->assertStringContainsString('ProductStatus::class =>', $en);
+        $this->assertStringContainsString("ProductStatus::Active->value => 'Active'", $en);
+
+        $ar = File::get(lang_path('ar/enums.php'));
+        $this->assertStringContainsString("ProductStatus::Active->value => 'نشط'", $ar);
 
         $model = File::get(app_path('Models/Product.php'));
         $this->assertStringContainsString('use App\Enums\ProductStatus;', $model);
@@ -128,7 +172,29 @@ class MakeModuleCommandTest extends TestCase
             app_path('Http/Filters/ProductFilter.php'),
             app_path('Http/Requests/Products/StoreProductRequest.php'),
             database_path('factories/ProductFactory.php'),
+            lang_path('en/enums.php'),
+            lang_path('ar/enums.php'),
         ]);
+    }
+
+    public function test_int_backed_enums_are_supported(): void
+    {
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--fields' => 'name:string, status:enum:int',
+        ])->assertExitCode(0);
+
+        $enum = File::get(app_path('Enums/ProductStatus.php'));
+        $this->assertStringContainsString('enum ProductStatus: int', $enum);
+        $this->assertStringContainsString('case Inactive = 0;', $enum);
+        $this->assertStringContainsString('case Active = 1;', $enum);
+
+        $migration = File::get(File::glob(database_path('migrations/*_create_products_table.php'))[0]);
+        $this->assertStringContainsString("\$table->unsignedTinyInteger('status')", $migration);
+
+        $ar = File::get(lang_path('ar/enums.php'));
+        $this->assertStringContainsString("ProductStatus::Inactive->value => 'غير نشط'", $ar);
+        $this->assertStringContainsString("ProductStatus::Active->value => 'نشط'", $ar);
     }
 
     public function test_custom_pattern_lists_are_supported(): void
@@ -141,7 +207,7 @@ class MakeModuleCommandTest extends TestCase
 
         $this->assertFileExists(app_path('Models/Product.php'));
         $this->assertFileDoesNotExist(app_path('Services/ProductService.php'));
-        $this->assertFileDoesNotExist(app_path('Http/Controllers/ProductController.php'));
+        $this->assertFileDoesNotExist(app_path('Http/Controllers/Api/ProductController.php'));
     }
 
     public function test_existing_files_are_skipped_without_force(): void

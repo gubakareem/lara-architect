@@ -16,7 +16,8 @@ class MakeModuleCommand extends Command
         {name : The module name, e.g. Product}
         {--a|architecture= : Architecture preset (run architect:patterns to list them)}
         {--p|patterns= : Comma-separated pattern list, overrides the preset}
-        {--fields= : Field definitions, e.g. "name:string, price:decimal, sku:string:unique, notes:text:nullable"}
+        {--ui= : Presentation layer: api (JsonResource + Api controller) or web (Blade views)}
+        {--fields= : Field definitions, e.g. "name:string, status:enum:int, price:decimal:nullable"}
         {--no-uuid : Skip the uuid column and HasUuid trait}
         {--no-soft-deletes : Skip soft deletes}
         {--force : Overwrite existing files}
@@ -35,9 +36,10 @@ class MakeModuleCommand extends Command
         }
 
         $this->components->info(sprintf(
-            'Generating module [%s] with architecture [%s].',
+            'Generating module [%s] with architecture [%s] (%s).',
             $blueprint->model(),
             $blueprint->architecture,
+            $blueprint->presentation,
         ));
 
         $this->components->twoColumnDetail('Patterns', implode(', ', $blueprint->patterns));
@@ -67,8 +69,11 @@ class MakeModuleCommand extends Command
         $this->line('  1. Review the generated migration, then run: php artisan migrate');
 
         if ($blueprint->hasPattern('controller')) {
+            $routeHelper = $blueprint->isApi() ? 'apiResource' : 'resource';
+
             $this->line(sprintf(
-                "  2. Register routes: Route::apiResource('%s', \\%s\\%sController::class);",
+                "  2. Register routes: Route::%s('%s', \\%s\\%sController::class);",
+                $routeHelper,
                 $blueprint->routeName(),
                 $blueprint->namespaceFor('controller'),
                 $blueprint->model(),
@@ -83,19 +88,82 @@ class MakeModuleCommand extends Command
         $architecture = $this->option('architecture')
             ?: config('lara-architect.generation.default_architecture', 'service-repository');
 
+        $presentation = $this->resolvePresentation();
+
         $patterns = $this->option('patterns')
             ? array_values(array_filter(array_map('trim', explode(',', (string) $this->option('patterns')))))
             : ModuleGenerator::patternsForArchitecture($architecture);
+
+        $patterns = $this->applyPresentation($patterns, $presentation);
+        $namespaces = $this->resolveNamespaces($presentation);
 
         return new ModuleBlueprint(
             name: (string) $this->argument('name'),
             fields: FieldParser::parse($this->option('fields')),
             architecture: $this->option('patterns') ? 'custom' : $architecture,
             patterns: $patterns,
-            namespaces: config('lara-architect.generation.namespaces', []),
+            namespaces: $namespaces,
             usesUuid: ! $this->option('no-uuid') && (bool) config('lara-architect.models.uuids', true),
             usesSoftDeletes: ! $this->option('no-soft-deletes') && (bool) config('lara-architect.models.soft_deletes', true),
+            presentation: $presentation,
         );
+    }
+
+    private function resolvePresentation(): string
+    {
+        $ui = strtolower((string) ($this->option('ui')
+            ?: config('lara-architect.generation.default_ui', ModuleBlueprint::PRESENTATION_API)));
+
+        if (! in_array($ui, [ModuleBlueprint::PRESENTATION_API, ModuleBlueprint::PRESENTATION_WEB], true)) {
+            throw new InvalidArgumentException(
+                'Invalid --ui value. Use "api" (JsonResource + Api controllers) or "web" (Blade views).',
+            );
+        }
+
+        return $ui;
+    }
+
+    /**
+     * @param  list<string>  $patterns
+     * @return list<string>
+     */
+    private function applyPresentation(array $patterns, string $presentation): array
+    {
+        if ($presentation === ModuleBlueprint::PRESENTATION_WEB) {
+            $patterns = array_values(array_filter($patterns, static fn (string $p) => $p !== 'resource'));
+
+            if (in_array('controller', $patterns, true) && ! in_array('views', $patterns, true)) {
+                $index = array_search('controller', $patterns, true);
+                array_splice($patterns, (int) $index, 0, ['views']);
+            }
+
+            return $patterns;
+        }
+
+        $patterns = array_values(array_filter($patterns, static fn (string $p) => $p !== 'views'));
+
+        if (in_array('controller', $patterns, true) && ! in_array('resource', $patterns, true)) {
+            $index = array_search('controller', $patterns, true);
+            array_splice($patterns, (int) $index, 0, ['resource']);
+        }
+
+        return $patterns;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function resolveNamespaces(string $presentation): array
+    {
+        /** @var array<string, string> $namespaces */
+        $namespaces = config('lara-architect.generation.namespaces', []);
+
+        if ($presentation === ModuleBlueprint::PRESENTATION_API) {
+            $namespaces['controller'] = $namespaces['controller_api']
+                ?? (($namespaces['controller'] ?? 'App\\Http\\Controllers').'\\Api');
+        }
+
+        return $namespaces;
     }
 
     private function preview(ModuleGenerator $generator, ModuleBlueprint $blueprint): int

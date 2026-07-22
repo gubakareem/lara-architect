@@ -2,13 +2,13 @@
 
 namespace {{ namespace }};
 
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
 /**
  * Request-driven filters for {{ model }} queries.
  * Example: GET /{{ routeName }}?search=term&price_min=100
  */
-class {{ model }}Filter extends QueryFilter
+class {{ model }}Filter extends ArchitectQueryFilter
 {
 {{ methods }}
 }

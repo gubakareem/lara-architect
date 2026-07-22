@@ -6,6 +6,10 @@ namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
 use KarimAshraf\LaraArchitect\Enums\Concerns\EnumHelpers;
 
+/**
+ * @method bool isDraft()
+ * @method bool isPublished()
+ */
 enum PostStatus: string
 {
     use EnumHelpers;

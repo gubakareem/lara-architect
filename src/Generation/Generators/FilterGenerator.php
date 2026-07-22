@@ -8,7 +8,7 @@ use KarimAshraf\LaraArchitect\Generation\Field;
 use KarimAshraf\LaraArchitect\Generation\ModuleBlueprint;
 
 /**
- * Generates a QueryFilter with sensible filter methods per field:
+ * Generates an ArchitectQueryFilter with sensible filter methods per field:
  * a search() across text fields, like-matches for strings, exact matches
  * for booleans/integers/enums and min/max ranges for numeric fields.
  */

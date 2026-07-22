@@ -3,9 +3,9 @@
 namespace {{ namespace }};
 
 use {{ modelClass }};
-{{ dtoImport }}use KarimAshraf\LaraArchitect\Actions\Action;
+{{ dtoImport }}use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
 
-class Update{{ model }} extends Action
+class Update{{ model }} extends ArchitectAction
 {
     protected function handle({{ model }} ${{ modelVariable }}, {{ dataParameter }}): {{ model }}
     {

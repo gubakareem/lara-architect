@@ -9,7 +9,7 @@ use KarimAshraf\LaraArchitect\Tests\Concerns\CreatesPostsTable;
 use KarimAshraf\LaraArchitect\Tests\Fixtures\PostService;
 use KarimAshraf\LaraArchitect\Tests\TestCase;
 
-class BaseServiceTest extends TestCase
+class ArchitectServiceTest extends TestCase
 {
     use CreatesPostsTable;
 

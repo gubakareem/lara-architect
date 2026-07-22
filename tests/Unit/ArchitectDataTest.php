@@ -9,7 +9,7 @@ use KarimAshraf\LaraArchitect\Tests\Fixtures\PostData;
 use KarimAshraf\LaraArchitect\Tests\Fixtures\PostStatus;
 use PHPUnit\Framework\TestCase;
 
-class BaseDataTest extends TestCase
+class ArchitectDataTest extends TestCase
 {
     public function test_it_hydrates_from_snake_case_arrays(): void
     {

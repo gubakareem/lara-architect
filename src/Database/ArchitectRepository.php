@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use InvalidArgumentException;
 use KarimAshraf\LaraArchitect\Contracts\Repository;
 use KarimAshraf\LaraArchitect\Exceptions\SoftDeletesNotEnabledException;
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
 /**
  * Generic Eloquent repository. Extend it, point it at a model and add your
@@ -24,7 +24,7 @@ use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
  *
  * @implements Repository<TModel>
  */
-abstract class BaseRepository implements Repository
+abstract class ArchitectRepository implements Repository
 {
     /** @var TModel */
     protected Model $model;
@@ -138,7 +138,7 @@ abstract class BaseRepository implements Repository
         return $this->trashedQuery()->with($with)->get($columns);
     }
 
-    public function filter(QueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator
+    public function filter(ArchitectQueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator
     {
         return $filter->apply($this->query()->with($with))->paginate($perPage);
     }

@@ -1,0 +1,16 @@
+@php
+    /** @var \{{ modelClass }} ${{ modelVariable }} */
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ model }} #{{ ${{ modelVariable }}->getKey() }}</title>
+</head>
+<body>
+    <h1>{{ model }} #{{ ${{ modelVariable }}->getKey() }}</h1>
+    <p><a href="{{ route('{{ routeName }}.edit', ${{ modelVariable }}) }}">Edit</a></p>
+    <p><a href="{{ route('{{ routeName }}.index') }}">Back</a></p>
+</body>
+</html>

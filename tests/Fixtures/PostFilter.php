@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Tests\Fixtures;
 
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
-class PostFilter extends QueryFilter
+class PostFilter extends ArchitectQueryFilter
 {
     public function search(string $value): void
     {

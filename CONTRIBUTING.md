@@ -42,7 +42,7 @@ All three must pass. A few guidelines:
 
 ## Commit messages
 
-Use clear, imperative commit messages (e.g. `Add restoreAll support to BaseRepository`). Reference related issues where applicable (`Fixes #12`).
+Use clear, imperative commit messages (e.g. `Add restoreAll support to ArchitectRepository`). Reference related issues where applicable (`Fixes #12`).
 
 ## Branching
 

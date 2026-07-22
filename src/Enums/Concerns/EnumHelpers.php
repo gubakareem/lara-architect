@@ -4,23 +4,16 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Enums\Concerns;
 
+use BadMethodCallException;
 use Illuminate\Support\Str;
 
 /**
- * Shared helpers for backed enums. Any method can be overridden by simply
- * redeclaring it on the enum — a common case is a custom label():
+ * Shared helpers for backed enums (string or int). Labels resolve from
+ * `lang/{locale}/enums.php` when present (class => [value => label]), then
+ * fall back to a headline of the value. Any method can be overridden by
+ * redeclaring it on the enum.
  *
- *     enum ProductStatus: string
- *     {
- *         use EnumHelpers;
- *
- *         case Active = 'active';
- *
- *         public function label(): string
- *         {
- *             return __("statuses.{$this->value}");
- *         }
- *     }
+ * Magic `is{Case}()` helpers are provided, e.g. `$status->isActive()`.
  */
 trait EnumHelpers
 {
@@ -48,10 +41,16 @@ trait EnumHelpers
     }
 
     /**
-     * Human-readable label ("in_review" becomes "In Review").
+     * Translated label from lang/{locale}/enums.php, or a headline fallback.
      */
     public function label(): string
     {
+        $translations = trans('enums');
+
+        if (is_array($translations) && isset($translations[static::class][$this->value])) {
+            return (string) $translations[static::class][$this->value];
+        }
+
         return Str::headline((string) $this->value);
     }
 
@@ -63,5 +62,29 @@ trait EnumHelpers
     public function isNot(self $other): bool
     {
         return $this !== $other;
+    }
+
+    /**
+     * Support `$enum->isActive()` / `$enum->isInactive()` for each case name.
+     *
+     * @param  array<int, mixed>  $arguments
+     */
+    public function __call(string $name, array $arguments): mixed
+    {
+        if (str_starts_with($name, 'is') && strlen($name) > 2 && $name !== 'isNot') {
+            $caseName = substr($name, 2);
+
+            foreach (self::cases() as $case) {
+                if (strcasecmp($case->name, $caseName) === 0) {
+                    return $this === $case;
+                }
+            }
+        }
+
+        throw new BadMethodCallException(sprintf(
+            'Method %s::%s() does not exist.',
+            static::class,
+            $name,
+        ));
     }
 }

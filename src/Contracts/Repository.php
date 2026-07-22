@@ -9,7 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use KarimAshraf\LaraArchitect\Http\Filters\QueryFilter;
+use KarimAshraf\LaraArchitect\Http\Filters\ArchitectQueryFilter;
 
 /**
  * @template TModel of Model
@@ -103,7 +103,7 @@ interface Repository
     /**
      * Paginate records with a request-driven query filter applied.
      */
-    public function filter(QueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator;
+    public function filter(ArchitectQueryFilter $filter, int $perPage = 15, array $with = []): LengthAwarePaginator;
 
     /**
      * Whether the underlying model uses the SoftDeletes trait.

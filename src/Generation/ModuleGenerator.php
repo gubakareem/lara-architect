@@ -29,7 +29,9 @@ final class ModuleGenerator
         $skipped = [];
 
         foreach ($this->collectFiles($blueprint) as $file) {
-            if (! $force && $this->files->exists($file->path)) {
+            // Mergeable files (e.g. lang/*/enums.php) always write — the generator
+            // already merged existing translations into $file->contents.
+            if (! $force && ! $file->merge && $this->files->exists($file->path)) {
                 $skipped[] = $file;
 
                 continue;
