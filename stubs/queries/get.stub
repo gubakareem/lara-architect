@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+
+class Get{{ model }}Query
+{
+    public function byId(int|string $id, array $with = []): {{ model }}
+    {
+        return {{ model }}::query()->with($with)->findOrFail($id);
+    }
+}

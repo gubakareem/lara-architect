@@ -25,6 +25,10 @@ class MakeModuleCommandTest extends TestCase
         File::deleteDirectory(resource_path('views/products'));
         File::deleteDirectory(app_path('Policies'));
         File::deleteDirectory(app_path('Domain'));
+        File::deleteDirectory(app_path('Infrastructure'));
+        File::deleteDirectory(app_path('Commands'));
+        File::deleteDirectory(app_path('Queries'));
+        File::deleteDirectory(app_path('Pipelines'));
         File::delete(lang_path('en/enums.php'));
         File::delete(lang_path('ar/enums.php'));
         File::delete(database_path('factories/ProductFactory.php'));
@@ -329,6 +333,10 @@ class MakeModuleCommandTest extends TestCase
                 [
                     'service-repository' => 'service-repository — Service + repository layer (classic layered CRUD)',
                     'actions' => 'actions — Single-purpose action classes + DTO (no service/repository)',
+                    'adr' => 'adr — Action–Domain–Responder style (same scaffold as actions)',
+                    'ddd' => 'ddd — Domain-oriented folders under App\\Domain\\{Module}\\…',
+                    'cqrs' => 'cqrs — Separate commands (writes) and queries (reads) + DTO',
+                    'pipeline' => 'pipeline — Illuminate Pipeline with validation + persist pipes',
                     'lean' => 'lean — Minimal: model, migration, requests, controller only',
                 ],
             )
@@ -349,6 +357,51 @@ class MakeModuleCommandTest extends TestCase
         $this->assertFileExists(app_path('Policies/ProductPolicy.php'));
         $this->assertFileExists(database_path('seeders/ProductSeeder.php'));
         $this->assertFileExists(base_path('tests/Feature/ProductModuleTest.php'));
+    }
+
+    public function test_architect_feature_prompts_for_name_when_omitted(): void
+    {
+        $this->artisan('architect:feature')
+            ->expectsQuestion('What should the module be called?', 'Product')
+            ->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Models/Product.php'));
+        $this->assertFileExists(app_path('Policies/ProductPolicy.php'));
+    }
+
+    public function test_ddd_preset_uses_domain_namespaces(): void
+    {
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--architecture' => 'ddd',
+            '--fields' => 'name:string',
+            '--ui' => 'api',
+        ])->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Domain/Product/Models/Product.php'));
+        $this->assertFileExists(app_path('Domain/Product/Services/ProductService.php'));
+        $this->assertFileExists(app_path('Infrastructure/Product/ProductRepository.php'));
+        $this->assertFileExists(app_path('Domain/Product/Data/ProductData.php'));
+
+        $service = File::get(app_path('Domain/Product/Services/ProductService.php'));
+        $this->assertStringContainsString('namespace App\Domain\Product\Services;', $service);
+        $this->assertStringContainsString('use App\Infrastructure\Product\ProductRepository;', $service);
+    }
+
+    public function test_cqrs_preset_generates_commands_and_queries(): void
+    {
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--architecture' => 'cqrs',
+            '--fields' => 'name:string',
+        ])->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Commands/Products/CreateProductCommand.php'));
+        $this->assertFileExists(app_path('Queries/Products/ListProductsQuery.php'));
+        $this->assertFileExists(app_path('Queries/Products/GetProductQuery.php'));
+
+        $controller = File::get(app_path('Http/Controllers/Api/ProductController.php'));
+        $this->assertStringContainsString('CreateProductCommand::run', $controller);
     }
 
     /**

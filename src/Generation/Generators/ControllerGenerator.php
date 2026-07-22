@@ -55,6 +55,7 @@ class ControllerGenerator extends BaseGenerator
     {
         $style = match (true) {
             $blueprint->hasPattern('service') => 'service',
+            $blueprint->hasPattern('command') => 'commands',
             $blueprint->hasPattern('actions') => 'actions',
             default => 'plain',
         };
@@ -101,15 +102,19 @@ class ControllerGenerator extends BaseGenerator
     private function indexReplacements(ModuleBlueprint $blueprint): array
     {
         $usesService = $blueprint->hasPattern('service');
+        $usesQuery = $blueprint->hasPattern('query');
         $perPage = "(int) request()->integer('per_page', 15)";
+        $listQuery = 'List'.$blueprint->pluralModel().'Query';
 
         if (! $blueprint->hasPattern('filter')) {
             return [
                 'filterImport' => '',
                 'indexSignature' => '',
-                'indexQuery' => $usesService
-                    ? sprintf('$this->%sService->paginate(%s)', $blueprint->modelVariable(), $perPage)
-                    : sprintf('%s::latest()->paginate(%s)', $blueprint->model(), $perPage),
+                'indexQuery' => match (true) {
+                    $usesService => sprintf('$this->%sService->paginate(%s)', $blueprint->modelVariable(), $perPage),
+                    $usesQuery => sprintf('app(%s::class)->paginate(%s)', $listQuery, $perPage),
+                    default => sprintf('%s::latest()->paginate(%s)', $blueprint->model(), $perPage),
+                },
             ];
         }
 
@@ -118,9 +123,11 @@ class ControllerGenerator extends BaseGenerator
         return [
             'filterImport' => 'use '.$blueprint->namespaceFor('filter').'\\'.$filterClass.";\n",
             'indexSignature' => $filterClass.' $filter',
-            'indexQuery' => $usesService
-                ? sprintf('$this->%sService->filter($filter, %s)', $blueprint->modelVariable(), $perPage)
-                : sprintf('%s::filter($filter)->latest()->paginate(%s)', $blueprint->model(), $perPage),
+            'indexQuery' => match (true) {
+                $usesService => sprintf('$this->%sService->filter($filter, %s)', $blueprint->modelVariable(), $perPage),
+                $usesQuery => sprintf('%s::filter($filter)->latest()->paginate(%s)', $blueprint->model(), $perPage),
+                default => sprintf('%s::filter($filter)->latest()->paginate(%s)', $blueprint->model(), $perPage),
+            },
         ];
     }
 
@@ -135,6 +142,27 @@ class ControllerGenerator extends BaseGenerator
         if ($blueprint->hasPattern('service')) {
             return [
                 'serviceClass' => $blueprint->namespaceFor('service').'\\'.$model.'Service',
+            ];
+        }
+
+        if ($blueprint->hasPattern('command')) {
+            $commandNamespace = $blueprint->namespaceFor('command').'\\'.$blueprint->pluralModel();
+            $queryNamespace = $blueprint->namespaceFor('query').'\\'.$blueprint->pluralModel();
+            $usesDto = $blueprint->hasPattern('dto');
+            $usesQuery = $blueprint->hasPattern('query');
+            $dtoClass = $blueprint->namespaceFor('dto').'\\'.$model.'Data';
+
+            return [
+                'actionImports' => sprintf(
+                    "use %s\\Create%sCommand;\nuse %s\\Delete%sCommand;\nuse %s\\Update%sCommand;\n%s%s",
+                    $commandNamespace, $model,
+                    $commandNamespace, $model,
+                    $commandNamespace, $model,
+                    $usesQuery ? "use {$queryNamespace}\\List{$blueprint->pluralModel()}Query;\n" : '',
+                    $usesDto ? "use {$dtoClass};\n" : '',
+                ),
+                'storeArgument' => $usesDto ? $model.'Data::fromRequest($request)' : $requests['storeData'],
+                'updateArgument' => $usesDto ? $model.'Data::fromRequest($request)' : $requests['updateData'],
             ];
         }
 

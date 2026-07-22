@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-07-22
+
+### Added
+
+- Architecture presets: `ddd` (domain folders under `App\Domain\{Module}`), `cqrs` (commands + queries), `adr` (Action–Domain–Responder, same scaffold as actions), and `pipeline` (Illuminate Pipeline pipes).
+- `query`, `command`, and `pipeline` generators with stubs; CQRS-aware controller stubs.
+- `architecture_namespaces` config overlay so presets like `ddd` can remap namespaces without changing global defaults.
+
+### Fixed
+
+- `architect:feature` / `make:module` accept an optional name and prompt interactively when it is omitted (instead of failing with "Not enough arguments").
+
 ## [1.4.2] - 2026-07-22
 
 ### Fixed
@@ -122,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Laravel 11, 12 and 13 (PHP 8.2 – 8.5, per framework requirements).
 - Full test suite (PHPUnit via Orchestra Testbench), PHPStan level 5 (Larastan) and Laravel Pint.
 
-[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/gubakareem/lara-architect/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.3
 [1.4.2]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.2
 [1.4.1]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.1
 [1.4.0]: https://github.com/gubakareem/lara-architect/releases/tag/v1.4.0

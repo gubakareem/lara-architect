@@ -1,0 +1,59 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+{{ actionImports }}{{ filterImport }}{{ requestImports }}use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class {{ model }}Controller extends Controller
+{
+    public function index({{ indexSignature }}): View
+    {
+        return view('{{ viewPath }}.index', [
+            '{{ pluralVariable }}' => {{ indexQuery }},
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('{{ viewPath }}.create');
+    }
+
+    public function store({{ storeRequest }} $request): RedirectResponse
+    {
+        ${{ modelVariable }} = Create{{ model }}Command::run({{ storeArgument }});
+
+        return redirect()
+            ->route('{{ routeName }}.show', ${{ modelVariable }})
+            ->with('success', '{{ model }} created successfully.');
+    }
+
+    public function show({{ model }} ${{ modelVariable }}): View
+    {
+        return view('{{ viewPath }}.show', compact('{{ modelVariable }}'));
+    }
+
+    public function edit({{ model }} ${{ modelVariable }}): View
+    {
+        return view('{{ viewPath }}.edit', compact('{{ modelVariable }}'));
+    }
+
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }}): RedirectResponse
+    {
+        ${{ modelVariable }} = Update{{ model }}Command::run(${{ modelVariable }}, {{ updateArgument }});
+
+        return redirect()
+            ->route('{{ routeName }}.show', ${{ modelVariable }})
+            ->with('success', '{{ model }} updated successfully.');
+    }
+
+    public function destroy({{ model }} ${{ modelVariable }}): RedirectResponse
+    {
+        Delete{{ model }}Command::run(${{ modelVariable }});
+
+        return redirect()
+            ->route('{{ routeName }}.index')
+            ->with('success', '{{ model }} deleted successfully.');
+    }
+}

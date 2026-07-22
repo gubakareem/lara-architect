@@ -120,13 +120,27 @@ Validation, filtering, resources and the JSON envelope all work out of the box. 
 
 ### Architecture presets
 
-A preset is just a named list of patterns in `config/lara-architect.php`:
+A preset is just a named list of patterns in `config/lara-architect.php`. Built-in presets:
+
+| Preset | What you get |
+| --- | --- |
+| `service-repository` | Service + repository layered CRUD (default) |
+| `actions` | Single-purpose action classes + DTO |
+| `adr` | Action–Domain–Responder (same scaffold as `actions`) |
+| `ddd` | Domain folders under `App\Domain\{Module}\…` + infrastructure repositories |
+| `cqrs` | Commands (writes) + queries (reads) + DTO |
+| `pipeline` | Illuminate Pipeline with validation + persist pipes |
+| `lean` | Minimal: model, migration, requests, controller |
 
 ```php
 'architectures' => [
-    'service-repository' => ['model', 'migration', 'factory', 'enum', 'repository', 'service', 'filter', 'requests', 'resource', 'controller'],
-    'actions'            => ['model', 'migration', 'factory', 'enum', 'dto', 'actions', 'filter', 'requests', 'resource', 'controller'],
-    'lean'               => ['model', 'migration', 'requests', 'resource', 'controller'],
+    'service-repository' => [/* … */],
+    'actions' => [/* … */],
+    'adr' => [/* … */],
+    'ddd' => [/* … */],
+    'cqrs' => [/* … */],
+    'pipeline' => [/* … */],
+    'lean' => [/* … */],
 ],
 ```
 
@@ -139,10 +153,14 @@ php artisan make:module Product --fields="name:string, price:decimal"
 # Action + DTO style
 php artisan make:module Order --architecture=actions --fields="total:decimal, status:string"
 
+# Domain-Driven layout
+php artisan make:module Invoice --architecture=ddd --fields="total:decimal"
+
 # Or hand-pick patterns — no preset needed
 php artisan make:module Tag --patterns=model,migration,resource,controller --fields="name:string:unique"
 
-# Complete feature: preset patterns + policy + seeder + feature test
+# Complete feature (prompts for name if omitted)
+php artisan architect:feature
 php artisan architect:feature Product --fields="name:string, price:decimal"
 
 # Interactive wizard — answers a few questions, then generates

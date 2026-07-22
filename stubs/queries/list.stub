@@ -1,0 +1,31 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class List{{ pluralModel }}Query
+{
+    /**
+     * @param  list<string>  $with
+     * @return LengthAwarePaginator<int, {{ model }}>
+     */
+    public function paginate(int $perPage = 15, array $with = []): LengthAwarePaginator
+    {
+        return {{ model }}::query()
+            ->with($with)
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    /**
+     * @param  list<string>  $with
+     * @return Collection<int, {{ model }}>
+     */
+    public function all(array $with = []): Collection
+    {
+        return {{ model }}::query()->with($with)->get();
+    }
+}

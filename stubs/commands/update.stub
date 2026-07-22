@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+{{ dtoImport }}use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
+
+class Update{{ model }}Command extends ArchitectAction
+{
+    protected function handle({{ model }} ${{ modelVariable }}, {{ dataParameter }}): {{ model }}
+    {
+        ${{ modelVariable }}->update({{ updatePayload }});
+
+        return ${{ modelVariable }}->refresh();
+    }
+}

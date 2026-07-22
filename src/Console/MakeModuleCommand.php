@@ -14,7 +14,7 @@ use KarimAshraf\LaraArchitect\Support\TeamConfig;
 class MakeModuleCommand extends Command
 {
     protected $signature = 'make:module
-        {name : The module name, e.g. Product}
+        {name? : The module name, e.g. Product (prompted if omitted)}
         {--a|architecture= : Architecture preset (run architect:patterns to list them)}
         {--p|patterns= : Comma-separated pattern list, overrides the preset}
         {--ui= : Presentation layer: api (JsonResource + Api controller) or web (Blade views)}
@@ -110,10 +110,10 @@ class MakeModuleCommand extends Command
 
         $patterns = array_values(array_unique(array_merge($patterns, $this->extraPatterns())));
         $patterns = $this->applyPresentation($patterns, $presentation);
-        $namespaces = $this->resolveNamespaces($presentation);
+        $namespaces = $this->resolveNamespaces($presentation, $architecture);
 
         return new ModuleBlueprint(
-            name: (string) $this->argument('name'),
+            name: $this->resolveName(),
             fields: FieldParser::parse($this->option('fields')),
             architecture: $this->option('patterns') ? 'custom' : $architecture,
             patterns: $patterns,
@@ -122,6 +122,23 @@ class MakeModuleCommand extends Command
             usesSoftDeletes: ! $this->option('no-soft-deletes') && (bool) config('lara-architect.models.soft_deletes', true),
             presentation: $presentation,
         );
+    }
+
+    private function resolveName(): string
+    {
+        $name = $this->argument('name');
+
+        if (is_string($name) && trim($name) !== '') {
+            return trim($name);
+        }
+
+        if (! $this->input->isInteractive()) {
+            throw new InvalidArgumentException(
+                'Missing module name. Pass it as the first argument, or run `php artisan architect:new`.',
+            );
+        }
+
+        return (string) $this->ask('What should the module be called?', 'Product');
     }
 
     private function resolvePresentation(): string
@@ -168,10 +185,17 @@ class MakeModuleCommand extends Command
     /**
      * @return array<string, string>
      */
-    private function resolveNamespaces(string $presentation): array
+    private function resolveNamespaces(string $presentation, string $architecture): array
     {
         /** @var array<string, string> $namespaces */
         $namespaces = config('lara-architect.generation.namespaces', []);
+
+        /** @var array<string, array<string, string>> $overlays */
+        $overlays = config('lara-architect.generation.architecture_namespaces', []);
+
+        if (isset($overlays[$architecture]) && is_array($overlays[$architecture])) {
+            $namespaces = array_merge($namespaces, $overlays[$architecture]);
+        }
 
         if ($presentation === ModuleBlueprint::PRESENTATION_API) {
             $namespaces['controller'] = $namespaces['controller_api']

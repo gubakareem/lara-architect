@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use Closure;
+
+class Persist{{ model }}Pipe
+{
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function handle(array $payload, Closure $next): mixed
+    {
+        $payload['{{ modelVariable }}'] = {{ model }}::create($payload['data'] ?? $payload);
+
+        return $next($payload);
+    }
+}

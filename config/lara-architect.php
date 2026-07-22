@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use KarimAshraf\LaraArchitect\Generation\Generators\ActionsGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\CommandGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ControllerGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\DtoGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\EnumGenerator;
@@ -10,7 +11,9 @@ use KarimAshraf\LaraArchitect\Generation\Generators\FactoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\FilterGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\MigrationGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ModelGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\PipelineGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\PolicyGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\QueryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\RepositoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\RequestsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ResourceGenerator;
@@ -62,6 +65,22 @@ return [
                 'model', 'migration', 'factory', 'enum', 'dto', 'actions',
                 'filter', 'requests', 'resource', 'controller',
             ],
+            'adr' => [
+                'model', 'migration', 'factory', 'enum', 'dto', 'actions',
+                'filter', 'requests', 'resource', 'controller',
+            ],
+            'ddd' => [
+                'model', 'migration', 'factory', 'enum', 'dto', 'repository', 'service',
+                'filter', 'requests', 'resource', 'controller',
+            ],
+            'cqrs' => [
+                'model', 'migration', 'factory', 'enum', 'dto', 'query', 'command',
+                'filter', 'requests', 'resource', 'controller',
+            ],
+            'pipeline' => [
+                'model', 'migration', 'factory', 'enum', 'pipeline',
+                'requests', 'resource', 'controller',
+            ],
             'lean' => [
                 'model', 'migration', 'requests', 'resource', 'controller',
             ],
@@ -70,7 +89,26 @@ return [
         'architecture_descriptions' => [
             'service-repository' => 'Service + repository layer (classic layered CRUD)',
             'actions' => 'Single-purpose action classes + DTO (no service/repository)',
+            'adr' => 'Action–Domain–Responder style (same scaffold as actions)',
+            'ddd' => 'Domain-oriented folders under App\\Domain\\{Module}\\…',
+            'cqrs' => 'Separate commands (writes) and queries (reads) + DTO',
+            'pipeline' => 'Illuminate Pipeline with validation + persist pipes',
             'lean' => 'Minimal: model, migration, requests, controller only',
+        ],
+
+        /*
+        | Optional namespace overlays applied on top of generation.namespaces
+        | when a given architecture preset is selected.
+        */
+        'architecture_namespaces' => [
+            'ddd' => [
+                'model' => 'App\\Domain\\{module}\\Models',
+                'service' => 'App\\Domain\\{module}\\Services',
+                'repository' => 'App\\Infrastructure\\{module}',
+                'dto' => 'App\\Domain\\{module}\\Data',
+                'enum' => 'App\\Domain\\{module}\\Enums',
+                'filter' => 'App\\Domain\\{module}\\Filters',
+            ],
         ],
 
         /*
@@ -87,6 +125,9 @@ return [
             'service' => ServiceGenerator::class,
             'dto' => DtoGenerator::class,
             'actions' => ActionsGenerator::class,
+            'query' => QueryGenerator::class,
+            'command' => CommandGenerator::class,
+            'pipeline' => PipelineGenerator::class,
             'filter' => FilterGenerator::class,
             'requests' => RequestsGenerator::class,
             'resource' => ResourceGenerator::class,
@@ -118,6 +159,9 @@ return [
             'action' => 'App\\Actions',
             'dto' => 'App\\DTOs',
             'enum' => 'App\\Enums',
+            'query' => 'App\\Queries',
+            'command' => 'App\\Commands',
+            'pipeline' => 'App\\Pipelines',
             'filter' => 'App\\Http\\Filters',
             'controller' => 'App\\Http\\Controllers',
             'controller_api' => 'App\\Http\\Controllers\\Api',

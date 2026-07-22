@@ -1,0 +1,23 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Pipeline\Pipeline;
+
+class {{ model }}Pipeline
+{
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function send(array $payload): array
+    {
+        return app(Pipeline::class)
+            ->send($payload)
+            ->through([
+                Validate{{ model }}Pipe::class,
+                Persist{{ model }}Pipe::class,
+            ])
+            ->thenReturn();
+    }
+}

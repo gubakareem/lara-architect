@@ -1,0 +1,14 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+{{ dtoImport }}use KarimAshraf\LaraArchitect\Actions\ArchitectAction;
+
+class Create{{ model }}Command extends ArchitectAction
+{
+    protected function handle({{ dataParameter }}): {{ model }}
+    {
+        return {{ model }}::create({{ dataPayload }});
+    }
+}

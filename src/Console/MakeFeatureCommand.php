@@ -11,7 +11,7 @@ namespace KarimAshraf\LaraArchitect\Console;
 class MakeFeatureCommand extends MakeModuleCommand
 {
     protected $signature = 'architect:feature
-        {name : The feature name, e.g. Product}
+        {name? : The feature name, e.g. Product (prompted if omitted)}
         {--a|architecture= : Architecture preset (run architect:patterns to list them)}
         {--p|patterns= : Comma-separated pattern list, overrides the preset}
         {--ui= : Presentation layer: api (JsonResource + Api controller) or web (Blade views)}

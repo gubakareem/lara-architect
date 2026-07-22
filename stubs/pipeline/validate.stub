@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+
+class Validate{{ model }}Pipe
+{
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function handle(array $payload, Closure $next): mixed
+    {
+        // Add domain validation / authorization for {{ model }} here.
+
+        return $next($payload);
+    }
+}
