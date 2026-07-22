@@ -23,9 +23,14 @@ class MakeModuleCommandTest extends TestCase
         File::delete(app_path('Http/Controllers/ProductController.php'));
         File::delete(app_path('Http/Resources/ProductResource.php'));
         File::deleteDirectory(resource_path('views/products'));
+        File::deleteDirectory(app_path('Policies'));
+        File::deleteDirectory(app_path('Domain'));
         File::delete(lang_path('en/enums.php'));
         File::delete(lang_path('ar/enums.php'));
         File::delete(database_path('factories/ProductFactory.php'));
+        File::delete(database_path('seeders/ProductSeeder.php'));
+        File::delete(base_path('tests/Feature/ProductModuleTest.php'));
+        File::delete(base_path('architect.json'));
 
         foreach (File::glob(database_path('migrations/*_create_products_table.php')) as $migration) {
             File::delete($migration);
@@ -239,6 +244,96 @@ class MakeModuleCommandTest extends TestCase
             'name' => 'Product',
             '--architecture' => 'hexagonal',
         ])->assertExitCode(1);
+    }
+
+    public function test_architect_feature_adds_policy_seeder_and_test(): void
+    {
+        $this->artisan('architect:feature', [
+            'name' => 'Product',
+            '--fields' => 'name:string, price:decimal',
+        ])->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Models/Product.php'));
+        $this->assertFileExists(app_path('Policies/ProductPolicy.php'));
+        $this->assertFileExists(database_path('seeders/ProductSeeder.php'));
+        $this->assertFileExists(base_path('tests/Feature/ProductModuleTest.php'));
+
+        $policy = File::get(app_path('Policies/ProductPolicy.php'));
+        $this->assertStringContainsString('namespace App\Policies;', $policy);
+        $this->assertStringContainsString('public function update(User $user, Product $product): bool', $policy);
+
+        $seeder = File::get(database_path('seeders/ProductSeeder.php'));
+        $this->assertStringContainsString('namespace Database\Seeders;', $seeder);
+        $this->assertStringContainsString('Product::factory()->count(10)->create();', $seeder);
+
+        $test = File::get(base_path('tests/Feature/ProductModuleTest.php'));
+        $this->assertStringContainsString('namespace Tests\Feature;', $test);
+        $this->assertStringContainsString('class ProductModuleTest extends TestCase', $test);
+        $this->assertStringContainsString('$this->assertSoftDeleted($product);', $test);
+
+        $this->assertGeneratedPhpIsValid([
+            app_path('Policies/ProductPolicy.php'),
+            database_path('seeders/ProductSeeder.php'),
+            base_path('tests/Feature/ProductModuleTest.php'),
+        ]);
+    }
+
+    public function test_architect_json_overrides_package_config(): void
+    {
+        File::put(base_path('architect.json'), json_encode([
+            'generation' => [
+                'default_architecture' => 'lean',
+                'default_ui' => 'web',
+            ],
+        ], JSON_PRETTY_PRINT));
+
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--fields' => 'name:string',
+        ])->assertExitCode(0);
+
+        // lean preset: no service/repository; web ui: no Api controller.
+        $this->assertFileExists(app_path('Models/Product.php'));
+        $this->assertFileDoesNotExist(app_path('Services/ProductService.php'));
+        $this->assertFileDoesNotExist(app_path('Repositories/ProductRepository.php'));
+        $this->assertFileDoesNotExist(app_path('Http/Controllers/Api/ProductController.php'));
+        $this->assertFileExists(app_path('Http/Controllers/ProductController.php'));
+    }
+
+    public function test_module_placeholder_enables_domain_layouts(): void
+    {
+        config()->set('lara-architect.generation.namespaces.service', 'App\\Domain\\{module}\\Services');
+        config()->set('lara-architect.generation.namespaces.repository', 'App\\Domain\\{module}\\Repositories');
+
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--patterns' => 'model,repository,service',
+            '--fields' => 'name:string',
+        ])->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Domain/Product/Services/ProductService.php'));
+        $this->assertFileExists(app_path('Domain/Product/Repositories/ProductRepository.php'));
+
+        $service = File::get(app_path('Domain/Product/Services/ProductService.php'));
+        $this->assertStringContainsString('namespace App\Domain\Product\Services;', $service);
+        $this->assertStringContainsString('use App\Domain\Product\Repositories\ProductRepository;', $service);
+    }
+
+    public function test_architect_new_wizard_scaffolds_interactively(): void
+    {
+        $this->artisan('architect:new')
+            ->expectsQuestion('What should the module be called?', 'Product')
+            ->expectsQuestion('Which architecture preset?', 'service-repository')
+            ->expectsQuestion('API or web (Blade) presentation?', 'api')
+            ->expectsQuestion('Field definitions (e.g. "name:string, status:enum:int, price:decimal:nullable") — leave empty to skip', 'name:string')
+            ->expectsConfirmation('Include policy, seeder and test (full feature)?', 'yes')
+            ->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Models/Product.php'));
+        $this->assertFileExists(app_path('Services/ProductService.php'));
+        $this->assertFileExists(app_path('Policies/ProductPolicy.php'));
+        $this->assertFileExists(database_path('seeders/ProductSeeder.php'));
+        $this->assertFileExists(base_path('tests/Feature/ProductModuleTest.php'));
     }
 
     /**

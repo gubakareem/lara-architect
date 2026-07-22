@@ -62,6 +62,12 @@ abstract class BaseGenerator implements Generator
             return database_path(implode('/', $segments));
         }
 
+        if ($namespace === 'Tests' || str_starts_with($namespace, 'Tests\\')) {
+            $relative = str_replace('\\', '/', Str::after($namespace.'\\', 'Tests\\'));
+
+            return rtrim(base_path('tests/'.rtrim($relative, '/')), '/');
+        }
+
         return base_path(str_replace('\\', '/', $namespace));
     }
 

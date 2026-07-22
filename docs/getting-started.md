@@ -489,4 +489,22 @@ php artisan vendor:publish --tag=lara-architect-stubs
 # edit stubs/lara-architect/*.stub
 ```
 
-Change target namespaces (e.g. put models in `App\Domain\Models`) under `generation.namespaces` in the config. Add your own pattern by writing a class that implements `KarimAshraf\LaraArchitect\Contracts\Generator`, registering it under `generation.generators`, and adding it to a preset — see [Extending the generator](../README.md#extending-the-generator).
+Change target namespaces (e.g. put models in `App\Domain\Models`) under `generation.namespaces` in the config. Namespace values support a `{module}` placeholder for domain layouts — `App\Domain\{module}\Services` generates `App\Domain\Product\Services\ProductService`. Add your own pattern by writing a class that implements `KarimAshraf\LaraArchitect\Contracts\Generator`, registering it under `generation.generators`, and adding it to a preset — see [Extending the generator](../README.md#extending-the-generator).
+
+## 10. More commands
+
+```bash
+# Interactive wizard — asks for name, preset, UI and fields, then generates
+php artisan architect:new
+
+# make:module + policy + seeder + feature test in one go
+php artisan architect:feature Product --fields="name:string, price:decimal"
+
+# Check the app against the architecture conventions (CI-friendly, exit 1 on violations)
+php artisan architect:lint
+
+# Layer counts and hotspot report (fat controllers, God services, oversized files)
+php artisan architect:analyze
+```
+
+Team conventions can be committed as an `architect.json` file at the project root; it deep-merges over the package config whenever these commands run — see [Team conventions with architect.json](../README.md#team-conventions-with-architectjson).

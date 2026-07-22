@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use KarimAshraf\LaraArchitect\Analysis\Rules\ModelsDoNotDependOnHttpRule;
+use KarimAshraf\LaraArchitect\Analysis\Rules\NoEloquentInControllersRule;
+use KarimAshraf\LaraArchitect\Analysis\Rules\NoInlineValidationInControllersRule;
+use KarimAshraf\LaraArchitect\Analysis\Rules\NoRepositoriesInControllersRule;
 use KarimAshraf\LaraArchitect\Generation\Generators\ActionsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ControllerGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\DtoGenerator;
@@ -10,10 +14,13 @@ use KarimAshraf\LaraArchitect\Generation\Generators\FactoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\FilterGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\MigrationGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ModelGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\PolicyGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\RepositoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\RequestsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ResourceGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\SeederGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ServiceGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\TestGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ViewsGenerator;
 
 return [
@@ -81,7 +88,19 @@ return [
             'resource' => ResourceGenerator::class,
             'views' => ViewsGenerator::class,
             'controller' => ControllerGenerator::class,
+            'policy' => PolicyGenerator::class,
+            'seeder' => SeederGenerator::class,
+            'test' => TestGenerator::class,
         ],
+
+        /*
+        | Extra patterns appended by `architect:feature` on top of the chosen
+        | architecture preset, so a feature ships complete in one command.
+        */
+        'feature_extras' => ['policy', 'seeder', 'test'],
+
+        // Model used by generated policies.
+        'user_model' => 'App\\Models\\User',
 
         /*
         | Target namespaces per generated class type. Paths are derived from
@@ -101,6 +120,9 @@ return [
             'request' => 'App\\Http\\Requests',
             'resource' => 'App\\Http\\Resources',
             'factory' => 'Database\\Factories',
+            'policy' => 'App\\Policies',
+            'seeder' => 'Database\\Seeders',
+            'test' => 'Tests\\Feature',
         ],
     ],
 
@@ -167,6 +189,36 @@ return [
             'message' => 'message',
             'data' => 'data',
             'errors' => 'errors',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Architecture Lint & Analysis
+    |--------------------------------------------------------------------------
+    |
+    | `architect:lint` checks the paths below against the registered rules
+    | (each implements Contracts\LintRule — add your own to extend it) and
+    | fails when violations are found, so it can run in CI.
+    | `architect:analyze` reports layer counts and hotspots using the
+    | thresholds below.
+    |
+    */
+
+    'lint' => [
+        'paths' => ['app'],
+
+        'rules' => [
+            NoEloquentInControllersRule::class,
+            NoRepositoriesInControllersRule::class,
+            NoInlineValidationInControllersRule::class,
+            ModelsDoNotDependOnHttpRule::class,
+        ],
+
+        'thresholds' => [
+            'public_methods' => 8,
+            'constructor_dependencies' => 5,
+            'file_lines' => 300,
         ],
     ],
 ];

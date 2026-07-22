@@ -1,9 +1,10 @@
 # LaraArchitect
 
-An architecture toolkit for Laravel. It gives you two things:
+An architecture toolkit for Laravel. It gives you three things:
 
 1. **Runtime building blocks** — lean base classes for repositories (with full soft-delete support), CRUD services, single-purpose actions, request-driven query filters, data transfer objects, form requests and JSON responses, so business logic stays out of your controllers.
-2. **A dynamic module generator** — one `make:module` command that scaffolds an entire feature (model, migration, factory, enums, service/actions, filter, requests, resource, controller) using **configurable architecture presets**. Prefer actions over services? Repository pattern? Your own preset? It is all config.
+2. **A dynamic module generator** — one `make:module` command (plus `architect:feature` for policy/seeder/test, and the `architect:new` interactive wizard) that scaffolds an entire feature using **configurable architecture presets**. Prefer actions over services? Repository pattern? Domain layout? Your own preset? It is all config — versionable per team via `architect.json`.
+3. **Architecture guardrails** — `architect:lint` fails CI when conventions are broken (Eloquent in controllers, inline validation, inverted dependencies) and `architect:analyze` reports layer counts and hotspots.
 
 ```bash
 php artisan make:module Product --fields="name:string, price:decimal, sku:string:unique, status:enum, notes:text:nullable"
@@ -53,7 +54,11 @@ Published stubs live in `stubs/lara-architect/` and always win over the package 
 php artisan architect:patterns
 ```
 
-**2.** Generate a module (add `--dry-run` first to preview without writing). Default is **API** (JsonResource + `Http\Controllers\Api`). Use `--ui=web` for Blade:
+**2.** Generate a module (add `--dry-run` first to preview without writing). Default is **API** (JsonResource + `Http\Controllers\Api`). Use `--ui=web` for Blade. Not sure which flags you want? Run the interactive wizard instead:
+
+```bash
+php artisan architect:new
+```
 
 ```bash
 # API (default) — controller under App\Http\Controllers\Api + ProductResource
@@ -120,7 +125,15 @@ php artisan make:module Order --architecture=actions --fields="total:decimal, st
 
 # Or hand-pick patterns — no preset needed
 php artisan make:module Tag --patterns=model,migration,resource,controller --fields="name:string:unique"
+
+# Complete feature: preset patterns + policy + seeder + feature test
+php artisan architect:feature Product --fields="name:string, price:decimal"
+
+# Interactive wizard — answers a few questions, then generates
+php artisan architect:new
 ```
+
+`architect:feature` accepts the same flags as `make:module` and appends the patterns listed in `generation.feature_extras` (`policy`, `seeder`, `test` by default), so one command ships a model with a passing test, a seeder wired to the factory, and a policy ready to register.
 
 Other useful flags:
 
@@ -192,6 +205,57 @@ Every pattern is a class implementing `KarimAshraf\LaraArchitect\Contracts\Gener
 ```bash
 php artisan make:module Invoice --architecture=my-team-style
 ```
+
+### Team conventions with `architect.json`
+
+Commit an `architect.json` at your project root to version your team's conventions without publishing the package config. Anything under it deep-merges over `config/lara-architect.php` when the generator runs:
+
+```json
+{
+    "generation": {
+        "default_architecture": "actions",
+        "default_ui": "api",
+        "namespaces": {
+            "service": "App\\Domain\\{module}\\Services",
+            "repository": "App\\Domain\\{module}\\Repositories"
+        }
+    }
+}
+```
+
+### Domain / modular layouts
+
+Namespace values support a `{module}` placeholder that is replaced with the model name, so you can generate into a domain-oriented structure:
+
+```php
+'namespaces' => [
+    'service'    => 'App\\Domain\\{module}\\Services',     // App\Domain\Product\Services\ProductService
+    'repository' => 'App\\Domain\\{module}\\Repositories', // App\Domain\Product\Repositories\ProductRepository
+],
+```
+
+## Architecture lint & analysis
+
+Generating a clean structure is half the job — keeping it clean is the other half. Two read-only commands help with that:
+
+```bash
+# Fails (exit code 1) when conventions are broken — wire it into CI
+php artisan architect:lint
+
+# Layer counts + hotspots (long classes, fat constructors, God services)
+php artisan architect:analyze
+```
+
+`architect:lint` ships with four rules, each a class implementing `Contracts\LintRule` (register your own in `lint.rules`):
+
+| Rule | Catches |
+| --- | --- |
+| `no-eloquent-in-controllers` | Controllers calling `Model::create/update/where(...)` or the `DB` facade directly |
+| `no-repositories-in-controllers` | Controllers injecting repositories instead of services/actions |
+| `no-inline-validation-in-controllers` | `$request->validate(...)` / `Validator::make(...)` instead of form requests |
+| `models-do-not-depend-on-http` | Models importing controllers, form requests or services |
+
+`architect:analyze` reports how many controllers/models/services/repositories/actions exist and flags classes above the configurable thresholds (`lint.thresholds`): more than 8 public methods, more than 5 constructor dependencies, or files longer than 300 lines.
 
 ## Runtime building blocks
 

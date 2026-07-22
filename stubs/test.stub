@@ -1,0 +1,30 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class {{ model }}ModuleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_{{ table }}_can_be_created(): void
+    {
+        ${{ modelVariable }} = {{ model }}::factory()->create();
+
+        $this->assertDatabaseHas('{{ table }}', [
+            ${{ modelVariable }}->getKeyName() => ${{ modelVariable }}->getKey(),
+        ]);
+    }
+
+    public function test_{{ table }}_can_be_deleted(): void
+    {
+        ${{ modelVariable }} = {{ model }}::factory()->create();
+
+        ${{ modelVariable }}->delete();
+
+        {{ deleteAssertion }}
+    }
+}

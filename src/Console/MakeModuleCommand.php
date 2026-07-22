@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use KarimAshraf\LaraArchitect\Generation\FieldParser;
 use KarimAshraf\LaraArchitect\Generation\ModuleBlueprint;
 use KarimAshraf\LaraArchitect\Generation\ModuleGenerator;
+use KarimAshraf\LaraArchitect\Support\TeamConfig;
 
 class MakeModuleCommand extends Command
 {
@@ -28,6 +29,8 @@ class MakeModuleCommand extends Command
     public function handle(ModuleGenerator $generator): int
     {
         try {
+            TeamConfig::apply();
+
             $blueprint = $this->makeBlueprint();
         } catch (InvalidArgumentException $exception) {
             $this->components->error($exception->getMessage());
@@ -83,7 +86,18 @@ class MakeModuleCommand extends Command
         return self::SUCCESS;
     }
 
-    private function makeBlueprint(): ModuleBlueprint
+    /**
+     * Extra patterns appended on top of the preset — overridden by
+     * architect:feature to complete the module with policy/seeder/test.
+     *
+     * @return list<string>
+     */
+    protected function extraPatterns(): array
+    {
+        return [];
+    }
+
+    protected function makeBlueprint(): ModuleBlueprint
     {
         $architecture = $this->option('architecture')
             ?: config('lara-architect.generation.default_architecture', 'service-repository');
@@ -94,6 +108,7 @@ class MakeModuleCommand extends Command
             ? array_values(array_filter(array_map('trim', explode(',', (string) $this->option('patterns')))))
             : ModuleGenerator::patternsForArchitecture($architecture);
 
+        $patterns = array_values(array_unique(array_merge($patterns, $this->extraPatterns())));
         $patterns = $this->applyPresentation($patterns, $presentation);
         $namespaces = $this->resolveNamespaces($presentation);
 

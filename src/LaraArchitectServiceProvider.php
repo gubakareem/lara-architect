@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace KarimAshraf\LaraArchitect;
 
 use Illuminate\Support\ServiceProvider;
+use KarimAshraf\LaraArchitect\Console\AnalyzeCommand;
+use KarimAshraf\LaraArchitect\Console\LintCommand;
 use KarimAshraf\LaraArchitect\Console\ListPatternsCommand;
+use KarimAshraf\LaraArchitect\Console\MakeFeatureCommand;
 use KarimAshraf\LaraArchitect\Console\MakeModuleCommand;
+use KarimAshraf\LaraArchitect\Console\NewModuleWizardCommand;
 use KarimAshraf\LaraArchitect\Generation\StubRenderer;
 
 class LaraArchitectServiceProvider extends ServiceProvider
@@ -32,7 +36,11 @@ class LaraArchitectServiceProvider extends ServiceProvider
 
         $this->commands([
             MakeModuleCommand::class,
+            MakeFeatureCommand::class,
+            NewModuleWizardCommand::class,
             ListPatternsCommand::class,
+            LintCommand::class,
+            AnalyzeCommand::class,
         ]);
     }
 }

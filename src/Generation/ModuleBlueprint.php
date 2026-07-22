@@ -74,9 +74,16 @@ final class ModuleBlueprint
         return Str::snake($this->pluralModel());
     }
 
+    /**
+     * Target namespace for a generated class type. Supports a `{module}`
+     * placeholder for domain/modular layouts, e.g. configuring
+     * "App\Domain\{module}\Services" generates App\Domain\Product\Services.
+     */
     public function namespaceFor(string $type): string
     {
-        return $this->namespaces[$type] ?? 'App';
+        $namespace = $this->namespaces[$type] ?? 'App';
+
+        return str_replace('{module}', $this->model(), $namespace);
     }
 
     public function modelClass(): string
