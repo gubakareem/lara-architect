@@ -10,16 +10,23 @@ use InvalidArgumentException;
 /**
  * Parses the --fields option syntax:
  *
- *     name:string, price:decimal:nullable, status:enum:int, sku:string:unique
+ *     name:string, price:decimal:nullable, status:enum:int, parent_id:int
  *
- * Segments after the type are modifiers (nullable, unique, required) or, for
- * enum fields, a backing type (string|int — defaults to string).
+ * Segments after the name are a type (or alias like int→integer), then
+ * modifiers (nullable, unique, required). For enum fields, string|int
+ * after `enum` sets the backing type (defaults to string).
  */
 final class FieldParser
 {
     private const MODIFIERS = ['nullable', 'unique', 'required'];
 
     private const ENUM_BACKINGS = ['string', 'int'];
+
+    private const TYPE_ALIASES = [
+        'int' => 'integer',
+        'bool' => 'boolean',
+        'bigint' => 'biginteger',
+    ];
 
     /**
      * @return list<Field>
@@ -58,13 +65,17 @@ final class FieldParser
                 continue;
             }
 
-            if (in_array($lower, self::ENUM_BACKINGS, true)) {
+            // `status:enum:int` — int/string after enum is the backing type,
+            // not a field-type rewrite of the already-chosen enum.
+            if ($type === 'enum' && in_array($lower, self::ENUM_BACKINGS, true)) {
                 $enumBacking = $lower;
 
                 continue;
             }
 
-            if (! Field::isSupportedType($lower)) {
+            $resolved = self::TYPE_ALIASES[$lower] ?? $lower;
+
+            if (! Field::isSupportedType($resolved)) {
                 throw new InvalidArgumentException(sprintf(
                     'Unknown field type or modifier [%s] for field [%s].',
                     $part,
@@ -72,15 +83,7 @@ final class FieldParser
                 ));
             }
 
-            $type = $lower;
-        }
-
-        if ($enumBacking !== 'string' && $type !== 'enum') {
-            throw new InvalidArgumentException(sprintf(
-                'Backing type [%s] is only valid for enum fields (field [%s]).',
-                $enumBacking,
-                $name,
-            ));
+            $type = $resolved;
         }
 
         return new Field(

@@ -74,6 +74,25 @@ class FieldParserTest extends TestCase
         ], $fields[0]->enumCases());
     }
 
+    public function test_int_bool_and_bigint_are_type_aliases(): void
+    {
+        $fields = FieldParser::parse('parent_id:int, active:bool, views:bigint');
+
+        $this->assertSame('integer', $fields[0]->type);
+        $this->assertSame('boolean', $fields[1]->type);
+        $this->assertSame('biginteger', $fields[2]->type);
+    }
+
+    public function test_int_after_enum_is_backing_not_integer_type(): void
+    {
+        $fields = FieldParser::parse('name:json,parent_id:int,status:enum:int,order:int');
+
+        $this->assertSame('json', $fields[0]->type);
+        $this->assertSame('integer', $fields[1]->type);
+        $this->assertTrue($fields[2]->isIntEnum());
+        $this->assertSame('integer', $fields[3]->type);
+    }
+
     public function test_field_produces_migration_column_and_rules(): void
     {
         $field = new Field(name: 'price', type: 'decimal', nullable: true);

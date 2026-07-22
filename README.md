@@ -176,7 +176,7 @@ php artisan architect:patterns
 name:string, price:decimal, sku:string:unique, published_at:datetime:nullable, meta:json:nullable
 ```
 
-Supported types: `string`, `text`, `integer`, `biginteger`, `boolean`, `decimal`, `float`, `date`, `datetime`, `json`, `uuid`, `foreignid`, `enum`. Modifiers: `nullable`, `unique`. For enums, add a backing type: `status:enum` (string) or `status:enum:int` (integer).
+Supported types: `string`, `text`, `integer` (alias `int`), `biginteger` (alias `bigint`), `boolean` (alias `bool`), `decimal`, `float`, `date`, `datetime`, `json`, `uuid`, `foreignid`, `enum`. Modifiers: `nullable`, `unique`. For enums, add a backing type: `status:enum` (string) or `status:enum:int` (integer).
 
 A unique field automatically gets `Rule::unique(...)` in the store request and `Rule::unique(...)->ignore($this->route(...))` in the update request.
 
