@@ -22,8 +22,21 @@ This creates `config/lara-architect.php` in your app. You don't have to touch it
 ### Update the core package
 
 ```bash
-composer update karim-ashraf/lara-architect
+composer update karim-ashraf/lara-architect --prefer-dist
 ```
+
+Prefer `--prefer-dist` (zipball) over a git checkout. If you see `would clobber existing tag`:
+
+```bash
+composer clear-cache
+# PowerShell
+Remove-Item -Recurse -Force vendor\karim-ashraf\lara-architect -ErrorAction SilentlyContinue
+# bash: rm -rf vendor/karim-ashraf/lara-architect
+
+composer update karim-ashraf/lara-architect --prefer-dist
+```
+
+Or answer **yes** when Composer offers to reinstall the package.
 
 After upgrading:
 
@@ -91,10 +104,12 @@ JSON (same snapshot adapters use):
 **Update the Workspace UI:**
 
 ```bash
-composer update karim-ashraf/lara-architect-ui
+composer update karim-ashraf/lara-architect-ui --prefer-dist
 cd vendor/karim-ashraf/lara-architect-ui && npm install && npm run build
 php artisan vendor:publish --tag=lara-architect-ui-assets --force
 ```
+
+If you hit `would clobber existing tag`, use the same `composer clear-cache` + remove vendor package steps as for [core updates](#update-the-core-package).
 
 Full UI notes: [lara-architect-ui README](../../lara-architect-ui/README.md).
 

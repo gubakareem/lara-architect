@@ -95,8 +95,24 @@ Published stubs live in `stubs/lara-architect/` and always win over the package 
 ### Update the core package
 
 ```bash
-composer update karim-ashraf/lara-architect
+composer update karim-ashraf/lara-architect --prefer-dist
 ```
+
+Prefer `--prefer-dist` so Composer installs the zipball instead of cloning tags via git.
+
+If update fails with `would clobber existing tag` (stale Composer VCS cache after a tag/history refresh):
+
+```bash
+composer clear-cache
+# PowerShell
+Remove-Item -Recurse -Force vendor\karim-ashraf\lara-architect -ErrorAction SilentlyContinue
+# bash / macOS / Linux
+# rm -rf vendor/karim-ashraf/lara-architect
+
+composer update karim-ashraf/lara-architect --prefer-dist
+```
+
+You can also answer **yes** when Composer asks to reinstall the package.
 
 After upgrading, skim [CHANGELOG.md](CHANGELOG.md). Published config is deep-merged with package defaults (since 1.4.2), so newer generators keep working without a full re-publish.
 
