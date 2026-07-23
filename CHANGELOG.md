@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `state` — contract, draft/published/archived states, state context with transitions
   - `singleton` — `{Model}Registry` with classic Singleton semantics (documents Laravel container preference)
   - `abstract-factory` — component factory family (notifier + serializer) + client; separate from Eloquent `factory`
+- [ADR-0007](docs/adr/0007-event-bus-for-engine-extensibility.md): event bus for engine extensibility (planned for **v1.5 / Integration** — public extension events, compatibility promise, observational listeners).
 
 ## [1.4.3] - 2026-07-22
 

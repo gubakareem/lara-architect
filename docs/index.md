@@ -13,6 +13,7 @@ Welcome to the LaraArchitect documentation. The [README](../README.md) is the pr
 - [Runtime building blocks](../README.md#runtime-building-blocks) — repositories, services, actions, filters, DTOs
 - [Configuration reference](../README.md#configuration-reference)
 - [Changelog](../CHANGELOG.md)
+- [Architecture decisions](adr/) — e.g. [ADR-0007: Event bus for engine extensibility](adr/0007-event-bus-for-engine-extensibility.md) (v1.5)
 - [Contributing](../CONTRIBUTING.md)
 
 ## What's new
