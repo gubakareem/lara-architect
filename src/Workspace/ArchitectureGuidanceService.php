@@ -75,7 +75,7 @@ final class ArchitectureGuidanceService
     }
 
     /**
-     * @param  list<array{id?: string, title?: string, context?: string}>  $openIssues
+     * @param  array{id?: string, title?: string, context?: string}|null  $relatedIssue
      */
     private function fromRepeated(
         RepeatedProblemInsight $repeated,

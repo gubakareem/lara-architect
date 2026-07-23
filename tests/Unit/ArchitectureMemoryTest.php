@@ -4,13 +4,49 @@ declare(strict_types=1);
 
 namespace KarimAshraf\LaraArchitect\Tests\Unit;
 
+use KarimAshraf\LaraArchitect\Workspace\AlternativeStatus;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureBaseline;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureBaselineStore;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureChangeIntent;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureCollaborationService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureCommunicationService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureContextService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureConversationService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionMemory;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureEventStore;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureEventType;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureGuidanceService;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureHistoryService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeMapService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureMemory;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureOwnershipService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureQuestionService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureSession;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureTimeline;
+use KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary;
+use KarimAshraf\LaraArchitect\Workspace\ChangeExecutionId;
+use KarimAshraf\LaraArchitect\Workspace\ChangeIntentSource;
+use KarimAshraf\LaraArchitect\Workspace\CollaborationSubject;
+use KarimAshraf\LaraArchitect\Workspace\CommunicationAudience;
+use KarimAshraf\LaraArchitect\Workspace\ConversationEntryType;
+use KarimAshraf\LaraArchitect\Workspace\ConversationSubject;
+use KarimAshraf\LaraArchitect\Workspace\DecisionAlternative;
 use KarimAshraf\LaraArchitect\Workspace\EventCorrelation;
+use KarimAshraf\LaraArchitect\Workspace\FixProposalId;
+use KarimAshraf\LaraArchitect\Workspace\GuidanceDecision;
+use KarimAshraf\LaraArchitect\Workspace\GuidanceDismissReason;
+use KarimAshraf\LaraArchitect\Workspace\GuidedImprovementJourneyService;
 use KarimAshraf\LaraArchitect\Workspace\SessionConfidence;
+use KarimAshraf\LaraArchitect\Workspace\SessionId;
+use KarimAshraf\LaraArchitect\Workspace\VerificationPlan;
 use PHPUnit\Framework\TestCase;
 
 class ArchitectureMemoryTest extends TestCase
@@ -75,8 +111,10 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertStringContainsString('Verification', $history->latestStory->proof);
         $this->assertNotNull($history->trend);
         $this->assertSame(1, $history->trend->improvements);
-        $this->assertSame('fix:1', $history->replay[0]->correlation?->proposalId ?? $history->latestStory->correlation->proposalId);
-        $this->assertFileExists((new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEventStore)->streamPath($this->root));
+        $this->assertSame('fix:1', $history->replay[0]->correlation !== null
+            ? $history->replay[0]->correlation->proposalId
+            : $history->latestStory->correlation->proposalId);
+        $this->assertFileExists((new ArchitectureEventStore)->streamPath($this->root));
         $this->assertNotNull($history->intelligence);
         $this->assertNotEmpty($history->intelligence->summary);
         $this->assertArrayHasKey('story', $history->latestStory->toArray());
@@ -117,14 +155,14 @@ class ArchitectureMemoryTest extends TestCase
             'changes' => ['ProductService.php created'],
         ], $corr);
 
-        $decisions = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionMemory($memory))
+        $decisions = (new ArchitectureDecisionMemory($memory))
             ->forFile($this->root, 'ProductService.php', 'ProductController');
 
         $this->assertNotEmpty($decisions);
         $this->assertStringContainsString('service', strtolower($decisions[0]->question));
         $this->assertStringContainsString('service', strtolower($decisions[0]->decision));
 
-        $intel = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory))
+        $intel = (new ArchitectureIntelligenceService($memory))
             ->analyze($this->root);
         $this->assertStringContainsString('productcontroller', strtolower($intel->summary));
         $this->assertStringContainsString('confidence', strtolower($intel->summary));
@@ -160,7 +198,7 @@ class ArchitectureMemoryTest extends TestCase
             'health_after' => 85,
         ], $corr);
 
-        $intel = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory))
+        $intel = (new ArchitectureIntelligenceService($memory))
             ->analyze($this->root);
 
         $this->assertNotEmpty($intel->repeatedProblems);
@@ -172,8 +210,8 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertStringContainsString('Direct Model', $repeated->insight());
         $this->assertNotEmpty($intel->insights());
 
-        $guidance = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGuidanceService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $guidance = (new ArchitectureGuidanceService(
+            new ArchitectureIntelligenceService($memory),
         ))->recommend($this->root, currentHealth: 70);
 
         $this->assertNotNull($guidance);
@@ -184,15 +222,15 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertArrayHasKey('evidence', $guidance->toArray());
         $this->assertArrayHasKey('similar_improvements', $guidance->toArray()['evidence']);
 
-        $vocab = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary;
+        $vocab = new ArchitectureVocabulary;
         $this->assertSame(
             'Service Extraction',
             $vocab->canonicalize('Move Logic to Service')->label,
         );
 
-        $journey = (new \KarimAshraf\LaraArchitect\Workspace\GuidedImprovementJourneyService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGuidanceService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $journey = (new GuidedImprovementJourneyService(
+            new ArchitectureGuidanceService(
+                new ArchitectureIntelligenceService($memory),
             ),
             $memory,
         ))->forContext($this->root, 'A', 70, [
@@ -217,9 +255,9 @@ class ArchitectureMemoryTest extends TestCase
         $memory->recordGuidanceDecision(
             $this->root,
             'A',
-            \KarimAshraf\LaraArchitect\Workspace\GuidanceDecision::Dismissed,
+            GuidanceDecision::Dismissed,
             $guidance->concept,
-            \KarimAshraf\LaraArchitect\Workspace\GuidanceDismissReason::NotNow,
+            GuidanceDismissReason::NotNow,
         );
         $events = $memory->eventsForContext($this->root, 'A');
         $dismissed = array_values(array_filter(
@@ -229,22 +267,22 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertCount(1, $dismissed);
         $this->assertSame('not_now', $dismissed[0]->payload['reason']);
 
-        $standards = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $standards = (new ArchitectureStandardsService(
+            new ArchitectureVocabulary,
+            new ArchitectureIntelligenceService($memory),
             $memory,
         ))->all($this->root);
         $this->assertNotEmpty($standards);
         $this->assertSame('Service Extraction', $standards[0]->concept->label);
         $this->assertArrayHasKey('trust_signals', $standards[0]->evidence->toArray());
 
-        $governance = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $governance = (new ArchitectureGovernanceService(
+            new ArchitectureStandardsService(
+                new ArchitectureVocabulary,
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureIntelligenceService($memory),
         ))->assess($this->root);
         $this->assertStringContainsString('architecture we value', strtolower($governance->question));
         $this->assertNotEmpty($governance->alignments);
@@ -253,17 +291,17 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertArrayHasKey('alignment', $governance->snapshots[0]->toArray());
         $this->assertArrayHasKey('confidence', $governance->snapshots[0]->toArray());
 
-        $evolution = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService(
+        $evolution = (new ArchitectureEvolutionService(
             $memory,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureVocabulary,
+            new ArchitectureIntelligenceService($memory),
+            new ArchitectureGovernanceService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureIntelligenceService($memory),
             ),
         ))->evolve($this->root);
         $this->assertNotNull($evolution->direction);
@@ -275,34 +313,34 @@ class ArchitectureMemoryTest extends TestCase
         $accepted = $memory->recordGuidanceDecision(
             $this->root,
             'A',
-            \KarimAshraf\LaraArchitect\Workspace\GuidanceDecision::Accepted,
+            GuidanceDecision::Accepted,
             $guidance->concept,
         );
         $this->assertSame('guidance_accepted', $accepted->type->value);
-        $intent = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureChangeIntent(
+        $intent = new ArchitectureChangeIntent(
             area: 'A',
             intent: 'simplify_business_logic',
             expectedDirection: 'increase_service_boundary',
-            createdFrom: \KarimAshraf\LaraArchitect\Workspace\ChangeIntentSource::Guidance,
+            createdFrom: ChangeIntentSource::Guidance,
             concept: $guidance->concept,
         );
         $memory->recordChangeIntent($this->root, $intent, 'A');
 
-        $learning = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService(
+        $learning = (new ArchitectureLearningService(
             $memory,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService(
+            new ArchitectureVocabulary,
+            new ArchitectureIntelligenceService($memory),
+            new ArchitectureEvolutionService(
                 $memory,
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureVocabulary,
+                new ArchitectureIntelligenceService($memory),
+                new ArchitectureGovernanceService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureIntelligenceService($memory),
                 ),
             ),
         ))->learn($this->root);
@@ -322,11 +360,11 @@ class ArchitectureMemoryTest extends TestCase
     public function test_architecture_collaboration_preserves_notes_and_rationales(): void
     {
         $memory = new ArchitectureMemory;
-        $collab = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCollaborationService($memory);
+        $collab = new ArchitectureCollaborationService($memory);
 
         $note = $collab->addNote(
             projectRoot: $this->root,
-            subjectType: \KarimAshraf\LaraArchitect\Workspace\CollaborationSubject::Decision,
+            subjectType: CollaborationSubject::Decision,
             subjectKey: 'payments',
             body: 'We keep payment calculations outside controllers because multiple channels share the rules.',
             author: 'karim',
@@ -340,7 +378,7 @@ class ArchitectureMemoryTest extends TestCase
             reason: 'High throughput requirement.',
             author: 'karim',
             subjectKey: 'queues',
-            subjectType: \KarimAshraf\LaraArchitect\Workspace\CollaborationSubject::Decision,
+            subjectType: CollaborationSubject::Decision,
             context: 'payments',
         );
         $this->assertStringContainsString('Redis', $rationale->question);
@@ -368,8 +406,8 @@ class ArchitectureMemoryTest extends TestCase
     public function test_knowledge_transfer_onboarding_and_ownership(): void
     {
         $memory = new ArchitectureMemory;
-        $ownership = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureOwnershipService($memory);
-        $collab = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCollaborationService($memory, $ownership);
+        $ownership = new ArchitectureOwnershipService($memory);
+        $collab = new ArchitectureCollaborationService($memory, $ownership);
 
         $ownership->record($this->root, 'Billing', 'Billing Architecture', 'Payments Team');
         $collab->addRationale(
@@ -383,27 +421,27 @@ class ArchitectureMemoryTest extends TestCase
         );
         $collab->addNote(
             projectRoot: $this->root,
-            subjectType: \KarimAshraf\LaraArchitect\Workspace\CollaborationSubject::Decision,
+            subjectType: CollaborationSubject::Decision,
             subjectKey: 'Billing',
             body: 'This module is currently being migrated.',
             context: 'Billing',
         );
 
-        $transfer = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService(
+        $transfer = (new ArchitectureKnowledgeTransferService(
             $memory,
             $collab,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionMemory($memory),
+            new ArchitectureLearningService($memory),
+            new ArchitectureEvolutionService($memory),
+            new ArchitectureDecisionMemory($memory),
             $ownership,
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeMapService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureKnowledgeMapService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
                 $collab,
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
+                new ArchitectureLearningService($memory),
             ),
         ))->transfer($this->root, 'Billing');
 
@@ -425,8 +463,8 @@ class ArchitectureMemoryTest extends TestCase
     public function test_architecture_questions_route_deterministically(): void
     {
         $memory = new ArchitectureMemory;
-        $ownership = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureOwnershipService($memory);
-        $collab = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCollaborationService($memory, $ownership);
+        $ownership = new ArchitectureOwnershipService($memory);
+        $collab = new ArchitectureCollaborationService($memory, $ownership);
 
         $ownership->record($this->root, 'ProductService', 'Catalog Architecture', 'Orders Team');
         $collab->addRationale(
@@ -445,7 +483,7 @@ class ArchitectureMemoryTest extends TestCase
             'session_id' => 'session_ask',
         ]);
 
-        $questions = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureQuestionService(
+        $questions = new ArchitectureQuestionService(
             $memory,
             $collab,
             $ownership,
@@ -486,14 +524,14 @@ class ArchitectureMemoryTest extends TestCase
     public function test_architecture_conversations_bridge_to_rationale(): void
     {
         $memory = new ArchitectureMemory;
-        $collab = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCollaborationService($memory);
-        $conversations = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureConversationService($memory, $collab);
+        $collab = new ArchitectureCollaborationService($memory);
+        $conversations = new ArchitectureConversationService($memory, $collab);
 
         $started = $conversations->start(
             projectRoot: $this->root,
             topic: 'Queue Architecture',
             context: 'OrderProcessing',
-            subjectType: \KarimAshraf\LaraArchitect\Workspace\ConversationSubject::Decision,
+            subjectType: ConversationSubject::Decision,
             subjectKey: 'OrderProcessing',
             openingQuestion: 'Why not database queues?',
         );
@@ -504,14 +542,14 @@ class ArchitectureMemoryTest extends TestCase
             projectRoot: $this->root,
             conversationId: $started->id,
             context: 'OrderProcessing',
-            type: \KarimAshraf\LaraArchitect\Workspace\ConversationEntryType::Evidence,
+            type: ConversationEntryType::Evidence,
             content: 'Current queue usage: 500 jobs/min',
         );
         $conversations->addEntry(
             projectRoot: $this->root,
             conversationId: $started->id,
             context: 'OrderProcessing',
-            type: \KarimAshraf\LaraArchitect\Workspace\ConversationEntryType::Opinion,
+            type: ConversationEntryType::Opinion,
             content: 'Database queue could work, but load tests showed latency spikes.',
         );
 
@@ -524,14 +562,14 @@ class ArchitectureMemoryTest extends TestCase
             rationaleQuestion: 'Why Redis instead of database queue?',
             tradeoff: 'Requires Redis infrastructure.',
             alternatives: [
-                new \KarimAshraf\LaraArchitect\Workspace\DecisionAlternative(
+                new DecisionAlternative(
                     option: 'Database queue',
-                    status: \KarimAshraf\LaraArchitect\Workspace\AlternativeStatus::Rejected,
+                    status: AlternativeStatus::Rejected,
                     reason: 'Load tests showed latency spikes.',
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\DecisionAlternative(
+                new DecisionAlternative(
                     option: 'Sync processing',
-                    status: \KarimAshraf\LaraArchitect\Workspace\AlternativeStatus::Rejected,
+                    status: AlternativeStatus::Rejected,
                     reason: 'Cannot meet peak order throughput.',
                 ),
             ],
@@ -573,7 +611,7 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertContains('conversation_started', $replayTypes);
         $this->assertContains('conversation_decision_reached', $replayTypes);
 
-        $decisionHistory = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService(
+        $decisionHistory = (new ArchitectureDecisionHistoryService(
             $conversations,
             $memory,
             $collab,
@@ -583,30 +621,31 @@ class ArchitectureMemoryTest extends TestCase
         foreach ($decisionHistory->decisions as $record) {
             if ($record->decision === 'Keep Redis queue') {
                 $kept = $record;
+
                 break;
             }
         }
         $this->assertNotNull($kept);
         $this->assertNotEmpty($kept->alternatives);
 
-        $identity = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $identity = (new ArchitectureIdentityService(
+            new ArchitectureStandardsService(
+                new ArchitectureVocabulary,
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureEvolutionService($memory),
+            new ArchitectureLearningService($memory),
+            new ArchitectureGovernanceService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureIntelligenceService($memory),
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+            new ArchitectureIntelligenceService($memory),
         ))->identify($this->root);
         $this->assertStringContainsString('believe', strtolower($identity->question));
         $this->assertNotSame('', $identity->style);
@@ -616,35 +655,35 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertArrayHasKey('style', $identity->snapshot->toArray());
         $this->assertContains($identity->snapshot->styleConfidence, ['low', 'medium', 'high']);
 
-        $communication = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCommunicationService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $communication = (new ArchitectureCommunicationService(
+            new ArchitectureIdentityService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureEvolutionService($memory),
+                new ArchitectureLearningService($memory),
+                new ArchitectureGovernanceService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureIntelligenceService($memory),
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
+            new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+            new ArchitectureKnowledgeTransferService($memory, $collab),
+            new ArchitectureEvolutionService($memory),
         ))->communicate(
             $this->root,
             'OrderProcessing',
             180,
-            \KarimAshraf\LaraArchitect\Workspace\CommunicationAudience::Contributor,
+            CommunicationAudience::Contributor,
         );
         $this->assertStringContainsString('understand', strtolower($communication->question));
         $this->assertNotNull($communication->identity);
@@ -653,91 +692,91 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertSame('architecture_brief', $communication->brief->toArray()['kind']);
         $this->assertSame('contributor', $communication->audience->value);
 
-        $developerBrief = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCommunicationService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $developerBrief = (new ArchitectureCommunicationService(
+            new ArchitectureIdentityService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureEvolutionService($memory),
+                new ArchitectureLearningService($memory),
+                new ArchitectureGovernanceService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureIntelligenceService($memory),
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
+            new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+            new ArchitectureKnowledgeTransferService($memory, $collab),
+            new ArchitectureEvolutionService($memory),
         ))->communicate(
             $this->root,
             'OrderProcessing',
             180,
-            \KarimAshraf\LaraArchitect\Workspace\CommunicationAudience::Developer,
+            CommunicationAudience::Developer,
         );
         $this->assertStringContainsString('safely', strtolower($developerBrief->question));
         $this->assertSame('developer', $developerBrief->audience->value);
 
-        $architectureContext = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureContextService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $architectureContext = (new ArchitectureContextService(
+            new ArchitectureKnowledgeTransferService($memory, $collab),
+            new ArchitectureIdentityService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureEvolutionService($memory),
+                new ArchitectureLearningService($memory),
+                new ArchitectureGovernanceService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureIntelligenceService($memory),
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGuidanceService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+            new ArchitectureEvolutionService($memory),
+            new ArchitectureGuidanceService(
+                new ArchitectureIntelligenceService($memory),
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCommunicationService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureLearningService($memory),
+            new ArchitectureCommunicationService(
+                new ArchitectureIdentityService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureEvolutionService($memory),
+                    new ArchitectureLearningService($memory),
+                    new ArchitectureGovernanceService(
+                        new ArchitectureStandardsService(
+                            new ArchitectureVocabulary,
+                            new ArchitectureIntelligenceService($memory),
                             $memory,
                         ),
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                        new ArchitectureIntelligenceService($memory),
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureKnowledgeTransferService($memory, $collab),
+                new ArchitectureEvolutionService($memory),
             ),
         ))->forSubject($this->root, 'OrderProcessing');
         $this->assertStringContainsString('before i touch', strtolower($architectureContext->question));
@@ -745,58 +784,58 @@ class ArchitectureMemoryTest extends TestCase
         $this->assertNotSame('', $architectureContext->purpose);
         $this->assertNotSame('', $architectureContext->identityStyle);
 
-        $envelope = (new \KarimAshraf\LaraArchitect\Workspace\ArchitectureContextService(
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+        $envelope = (new ArchitectureContextService(
+            new ArchitectureKnowledgeTransferService($memory, $collab),
+            new ArchitectureIdentityService(
+                new ArchitectureStandardsService(
+                    new ArchitectureVocabulary,
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureEvolutionService($memory),
+                new ArchitectureLearningService($memory),
+                new ArchitectureGovernanceService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureIntelligenceService($memory),
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureIntelligenceService($memory),
                 $memory,
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGuidanceService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+            new ArchitectureEvolutionService($memory),
+            new ArchitectureGuidanceService(
+                new ArchitectureIntelligenceService($memory),
             ),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureCommunicationService(
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIdentityService(
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+            new ArchitectureLearningService($memory),
+            new ArchitectureCommunicationService(
+                new ArchitectureIdentityService(
+                    new ArchitectureStandardsService(
+                        new ArchitectureVocabulary,
+                        new ArchitectureIntelligenceService($memory),
                         $memory,
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureLearningService($memory),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureGovernanceService(
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureStandardsService(
-                            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureVocabulary,
-                            new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureEvolutionService($memory),
+                    new ArchitectureLearningService($memory),
+                    new ArchitectureGovernanceService(
+                        new ArchitectureStandardsService(
+                            new ArchitectureVocabulary,
+                            new ArchitectureIntelligenceService($memory),
                             $memory,
                         ),
-                        new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                        new ArchitectureIntelligenceService($memory),
                     ),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                    new \KarimAshraf\LaraArchitect\Workspace\ArchitectureIntelligenceService($memory),
+                    new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                    new ArchitectureIntelligenceService($memory),
                     $memory,
                 ),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureDecisionHistoryService($conversations, $memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureKnowledgeTransferService($memory, $collab),
-                new \KarimAshraf\LaraArchitect\Workspace\ArchitectureEvolutionService($memory),
+                new ArchitectureDecisionHistoryService($conversations, $memory, $collab),
+                new ArchitectureKnowledgeTransferService($memory, $collab),
+                new ArchitectureEvolutionService($memory),
             ),
         ))->envelope($this->root, 'OrderProcessing');
         $payload = $envelope->toArray();
@@ -829,18 +868,18 @@ class ArchitectureMemoryTest extends TestCase
 
     public function test_session_confidence_derives_from_signals(): void
     {
-        $session = new \KarimAshraf\LaraArchitect\Workspace\ArchitectureSession(
-            id: \KarimAshraf\LaraArchitect\Workspace\SessionId::of('session_x'),
-            proposalId: \KarimAshraf\LaraArchitect\Workspace\FixProposalId::of('fix:x'),
-            executionId: \KarimAshraf\LaraArchitect\Workspace\ChangeExecutionId::of('exec:x'),
+        $session = new ArchitectureSession(
+            id: SessionId::of('session_x'),
+            proposalId: FixProposalId::of('fix:x'),
+            executionId: ChangeExecutionId::of('exec:x'),
             context: 'ProductController',
             goal: 'Extract service',
             healthBefore: 91,
             healthAfter: 94,
             changes: ['Layer violation resolved'],
             verificationSummary: ['pint' => 'passed', 'phpstan' => 'passed', 'tests' => 'passed'],
-            verification: \KarimAshraf\LaraArchitect\Workspace\VerificationPlan::defaultPlan(),
-            timeline: \KarimAshraf\LaraArchitect\Workspace\ArchitectureTimeline::empty(),
+            verification: VerificationPlan::defaultPlan(),
+            timeline: ArchitectureTimeline::empty(),
             completedAt: gmdate('c'),
         );
 

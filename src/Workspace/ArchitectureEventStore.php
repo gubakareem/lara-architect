@@ -56,6 +56,7 @@ final class ArchitectureEventStore
             if (! is_array($decoded) || ! isset($decoded['type'])) {
                 continue;
             }
+
             try {
                 $events[] = ArchitectureEvent::fromArray($decoded);
             } catch (\ValueError) {

@@ -169,6 +169,7 @@ final class ArchitectureHistoryService
                         $helped,
                     );
                 }
+
                 break;
             }
         }

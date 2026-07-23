@@ -8,7 +8,6 @@ use KarimAshraf\LaraArchitect\Workspace\ArchitectureEdge;
 use KarimAshraf\LaraArchitect\Workspace\ArchitectureImpact;
 use KarimAshraf\LaraArchitect\Workspace\ChangeExecutionStatus;
 use KarimAshraf\LaraArchitect\Workspace\ChangeSet;
-use KarimAshraf\LaraArchitect\Workspace\ControlledChangeResult;
 use KarimAshraf\LaraArchitect\Workspace\ControlledChangeService;
 use KarimAshraf\LaraArchitect\Workspace\FileChange;
 use KarimAshraf\LaraArchitect\Workspace\FileChangeType;

@@ -124,6 +124,7 @@ final class GuidedImprovementJourneyService
                     $pattern->successRate * 100,
                     $pattern->averageHealthImpact,
                 );
+
                 break;
             }
         }

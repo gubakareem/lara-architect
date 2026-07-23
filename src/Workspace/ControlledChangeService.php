@@ -277,7 +277,7 @@ final class ControlledChangeService
             executionId: isset($raw['execution_id']) ? (string) $raw['execution_id'] : null,
         ));
 
-        return null;
+        return $synthetic;
     }
 
     private function persistSession(ArchitectureSession $session, string $projectRoot): void

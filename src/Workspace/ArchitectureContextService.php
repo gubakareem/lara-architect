@@ -96,7 +96,7 @@ final class ArchitectureContextService
             ],
             evidence: [
                 'watch' => $context->watch,
-                'improvement_count' => $context->brief?->improvementCount ?? 0,
+                'improvement_count' => $context->brief !== null ? $context->brief->improvementCount : 0,
                 'sources' => [
                     'memory',
                     'identity',

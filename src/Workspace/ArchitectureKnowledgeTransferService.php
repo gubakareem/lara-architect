@@ -63,8 +63,9 @@ final class ArchitectureKnowledgeTransferService
         $evolution = $this->evolution->evolve($projectRoot, $days);
         $collab = $this->collaboration->forContext($projectRoot, $area, 40);
 
-        $direction = $evolution->direction?->statement
-            ?? ($learning->preferredPaths[0]->preferredSolution->label ?? 'Keep improving toward clearer boundaries');
+        $direction = $evolution->direction !== null
+            ? $evolution->direction->statement
+            : ($learning->preferredPaths[0]->preferredSolution->label ?? 'Keep improving toward clearer boundaries');
 
         $decisions = [];
         foreach ($collab->rationales as $rationale) {

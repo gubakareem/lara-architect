@@ -50,6 +50,7 @@ final class ArchitectureGovernanceService
                         $remaining = max($remaining, 1);
                         $total = $completed + $remaining;
                         $percent = $total > 0 ? (int) round(($completed / $total) * 100) : $percent;
+
                         break;
                     }
                 }

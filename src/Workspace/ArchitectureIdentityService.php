@@ -112,6 +112,7 @@ final class ArchitectureIdentityService
         foreach (array_reverse($this->memory->allEvents($projectRoot, 200)) as $event) {
             if ($event->type === ArchitectureEventType::IdentityObserved) {
                 $last = (string) ($event->payload['style'] ?? '');
+
                 break;
             }
         }
@@ -250,9 +251,10 @@ final class ArchitectureIdentityService
         ArchitectureLearning $learning,
         array $standards,
     ): string {
-        $top = $evolution->direction?->concept
-            ?? ($learning->successfulPatterns[0]->concept ?? null)
-            ?? ($standards[0]->concept ?? null);
+        $top = $evolution->direction !== null
+            ? $evolution->direction->concept
+            : (($learning->successfulPatterns[0]->concept ?? null)
+                ?? ($standards[0]->concept ?? null));
 
         if ($top === null) {
             return 'Evolving Laravel architecture';
@@ -276,8 +278,9 @@ final class ArchitectureIdentityService
         ArchitectureEvolution $evolution,
         ArchitectureDecisionHistory $decisionHistory,
     ): array {
-        $improvements = $evolution->direction?->supportingImprovements
-            ?? ($learning->successfulPatterns[0]->applied ?? 0);
+        $improvements = $evolution->direction !== null
+            ? $evolution->direction->supportingImprovements
+            : ($learning->successfulPatterns[0]->applied ?? 0);
         $contexts = 0;
         if ($learning->successfulPatterns !== []) {
             $contexts = count($learning->successfulPatterns[0]->evidence->contexts);

@@ -161,6 +161,7 @@ final class ArchitectureLearningService
                     $c = $candidate->correlation->mergePayload($candidate->payload);
                     if ($c->issueId === $corr->issueId) {
                         $issueTitle = (string) ($candidate->payload['title'] ?? $issueTitle);
+
                         break;
                     }
                 }
@@ -231,7 +232,7 @@ final class ArchitectureLearningService
                 evidence: new LearningEvidence(
                     attempts: $row['count'],
                     successful: $row['success'],
-                    contexts: array_values($contexts),
+                    contexts: $contexts,
                     averageHealthDelta: round($avg, 1),
                 ),
                 insteadOf: $solution->id === ArchitectureVocabulary::SERVICE_EXTRACTION
@@ -273,7 +274,7 @@ final class ArchitectureLearningService
         foreach ($map as $id => $contexts) {
             $list = array_keys($contexts);
             sort($list);
-            $out[$id] = array_values($list);
+            $out[$id] = $list;
         }
 
         return $out;

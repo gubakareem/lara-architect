@@ -177,7 +177,7 @@ final class ArchitectureStandardsService
 
             $out[$concept->id] = new StandardEvidence(
                 successfulImprovements: $successes,
-                contexts: array_values($contexts),
+                contexts: $contexts,
                 averageHealthDelta: $avg,
                 verificationPassed: max($row['verifications'], $successes > 0 ? $successes : 0),
                 guidanceAccepted: $row['accepted'],

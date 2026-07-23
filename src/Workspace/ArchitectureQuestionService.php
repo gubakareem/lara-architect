@@ -173,6 +173,7 @@ final class ArchitectureQuestionService
                 'Rationale: '.($rationale->question !== '' ? $rationale->question : 'decision'),
                 $rationale->id,
             );
+
             break;
         }
 
@@ -305,7 +306,7 @@ final class ArchitectureQuestionService
             question: $question,
             reason: $reason,
             evidence: array_values(array_unique($evidence)),
-            decision: $history->latestStory?->decision ?? '',
+            decision: $history->latestStory !== null ? $history->latestStory->decision : '',
             sources: $this->uniqueSources($sources),
             confidence: $evidence !== [] ? 'medium' : 'low',
             summary: $reason,

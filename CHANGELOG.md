@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-07-23
+
+### Fixed
+
+- PHPStan and Pint CI failures on Architecture Memory Workspace sources (redundant `array_values`, nullsafe/`??` patterns, return types, style).
+
 ## [1.5.0] - 2026-07-23
 
 ### Added

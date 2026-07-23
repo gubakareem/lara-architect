@@ -144,6 +144,7 @@ final class ArchitectureIntelligenceService
                         foreach (array_keys($issueStats) as $title) {
                             if ($this->titlesAlign($title, $goal)) {
                                 $issueStats[$title]['resolved']++;
+
                                 break;
                             }
                         }
@@ -283,8 +284,8 @@ final class ArchitectureIntelligenceService
                 observed: sprintf(
                     '%s appeared %d time%s across %d context%s (%d resolved, %d remaining).',
                     $concept->label,
-                    $row['count'],
-                    $row['count'] === 1 ? '' : 's',
+                    (int) $row['count'],
+                    (int) $row['count'] === 1 ? '' : 's',
                     max(1, $contextCount),
                     $contextCount === 1 ? '' : 's',
                     $resolved,

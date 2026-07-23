@@ -121,7 +121,7 @@ final class ArchitectureCommunicationService
                 'Use Guidance → Proposal for changes — Questions stay read-only.',
             ]))),
             CommunicationAudience::Architect => array_values(array_unique(array_filter([
-                'Direction: '.($evolution->direction?->statement ?? 'still forming'),
+                'Direction: '.($evolution->direction !== null ? $evolution->direction->statement : 'still forming'),
                 'Identity confidence: '.$identity->snapshot->styleConfidence,
                 $recent[0] ?? 'Review recent evolution and decision history.',
             ]))),
@@ -142,8 +142,9 @@ final class ArchitectureCommunicationService
         return new ArchitectureBrief(
             identityStyle: $identity->snapshot->styleName,
             identityConfidence: $identity->snapshot->styleConfidence,
-            currentDirection: $evolution->direction?->statement
-                ?? ($onboarding->currentDirection !== '' ? $onboarding->currentDirection : 'Still forming'),
+            currentDirection: $evolution->direction !== null
+                ? $evolution->direction->statement
+                : ($onboarding->currentDirection !== '' ? $onboarding->currentDirection : 'Still forming'),
             principles: array_values(array_unique(array_slice($principles, 0, 5))),
             recentEvolution: array_values(array_unique(array_slice($recent, 0, 5))),
             importantDecisions: array_values(array_unique(array_slice($decisions, 0, 6))),

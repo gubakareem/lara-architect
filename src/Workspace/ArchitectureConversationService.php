@@ -413,6 +413,7 @@ final class ArchitectureConversationService
         foreach ($alternatives as $row) {
             if ($row instanceof DecisionAlternative) {
                 $out[] = $row;
+
                 continue;
             }
             if (is_array($row) && (string) ($row['option'] ?? '') !== '') {
