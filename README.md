@@ -132,6 +132,19 @@ A preset is just a named list of patterns in `config/lara-architect.php`. Built-
 | `pipeline` | Illuminate Pipeline with validation + persist pipes |
 | `lean` | Minimal: model, migration, requests, controller |
 
+GoF patterns (add with `--patterns=…`, not Eloquent `factory`):
+
+| Pattern | Generates |
+| --- | --- |
+| `strategy` | Interface + default/alternative strategies + context |
+| `state` | Interface + draft/published/archived states + context |
+| `singleton` | `{Model}Registry` singleton (prefer container binding in apps) |
+| `abstract-factory` | Family of factories/products (notifier + serializer) + client |
+
+```bash
+php artisan make:module Order --patterns=model,strategy,state,singleton,abstract-factory
+```
+
 ```php
 'architectures' => [
     'service-repository' => [/* … */],

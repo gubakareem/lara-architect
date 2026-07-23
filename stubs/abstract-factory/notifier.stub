@@ -1,0 +1,11 @@
+<?php
+
+namespace {{ namespace }};
+
+interface {{ model }}Notifier
+{
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function notify(array $payload): void;
+}

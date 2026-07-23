@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+
+final class Default{{ model }}Strategy implements {{ model }}Strategy
+{
+    public function name(): string
+    {
+        return 'default';
+    }
+
+    public function apply({{ model }} ${{ modelVariable }}, array $payload = []): {{ model }}
+    {
+        // Baseline behaviour for {{ model }} — extend with real domain rules.
+        ${{ modelVariable }}->fill($payload);
+
+        return ${{ modelVariable }};
+    }
+}

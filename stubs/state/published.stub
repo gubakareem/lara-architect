@@ -1,0 +1,26 @@
+<?php
+
+namespace {{ namespace }};
+
+final class Published{{ model }}State implements {{ model }}State
+{
+    public function name(): string
+    {
+        return 'published';
+    }
+
+    public function publish({{ model }}StateContext $context): void
+    {
+        // Already published.
+    }
+
+    public function archive({{ model }}StateContext $context): void
+    {
+        $context->transitionTo(new Archived{{ model }}State);
+    }
+
+    public function revertToDraft({{ model }}StateContext $context): void
+    {
+        $context->transitionTo(new Draft{{ model }}State);
+    }
+}

@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+final class Premium{{ model }}ComponentFactory implements {{ model }}ComponentFactory
+{
+    public function createNotifier(): {{ model }}Notifier
+    {
+        return new Premium{{ model }}Notifier;
+    }
+
+    public function createSerializer(): {{ model }}Serializer
+    {
+        return new Premium{{ model }}Serializer;
+    }
+}

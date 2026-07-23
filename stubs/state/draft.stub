@@ -1,0 +1,26 @@
+<?php
+
+namespace {{ namespace }};
+
+final class Draft{{ model }}State implements {{ model }}State
+{
+    public function name(): string
+    {
+        return 'draft';
+    }
+
+    public function publish({{ model }}StateContext $context): void
+    {
+        $context->transitionTo(new Published{{ model }}State);
+    }
+
+    public function archive({{ model }}StateContext $context): void
+    {
+        $context->transitionTo(new Archived{{ model }}State);
+    }
+
+    public function revertToDraft({{ model }}StateContext $context): void
+    {
+        // Already draft — no-op keeps the graph idempotent.
+    }
+}

@@ -1,0 +1,47 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * Tracks the current {{ model }} lifecycle state and forwards transitions.
+ *
+ *     $context = new {{ model }}StateContext(new Draft{{ model }}State());
+ *     $context->publish();   // → Published{{ model }}State
+ *     $context->archive();   // → Archived{{ model }}State
+ */
+final class {{ model }}StateContext
+{
+    public function __construct(
+        private {{ model }}State $state,
+    ) {}
+
+    public function transitionTo({{ model }}State $state): void
+    {
+        $this->state = $state;
+    }
+
+    public function state(): {{ model }}State
+    {
+        return $this->state;
+    }
+
+    public function name(): string
+    {
+        return $this->state->name();
+    }
+
+    public function publish(): void
+    {
+        $this->state->publish($this);
+    }
+
+    public function archive(): void
+    {
+        $this->state->archive($this);
+    }
+
+    public function revertToDraft(): void
+    {
+        $this->state->revertToDraft($this);
+    }
+}

@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\Log;
+
+final class Standard{{ model }}Notifier implements {{ model }}Notifier
+{
+    public function notify(array $payload): void
+    {
+        Log::info('{{ model }} notification (standard)', $payload);
+    }
+}

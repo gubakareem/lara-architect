@@ -29,6 +29,10 @@ class MakeModuleCommandTest extends TestCase
         File::deleteDirectory(app_path('Commands'));
         File::deleteDirectory(app_path('Queries'));
         File::deleteDirectory(app_path('Pipelines'));
+        File::deleteDirectory(app_path('Strategies'));
+        File::deleteDirectory(app_path('States'));
+        File::deleteDirectory(app_path('Singletons'));
+        File::deleteDirectory(app_path('Factories'));
         File::delete(lang_path('en/enums.php'));
         File::delete(lang_path('ar/enums.php'));
         File::delete(database_path('factories/ProductFactory.php'));
@@ -357,6 +361,45 @@ class MakeModuleCommandTest extends TestCase
         $this->assertFileExists(app_path('Policies/ProductPolicy.php'));
         $this->assertFileExists(database_path('seeders/ProductSeeder.php'));
         $this->assertFileExists(base_path('tests/Feature/ProductModuleTest.php'));
+    }
+
+    public function test_gof_patterns_generate_strategy_state_singleton_and_abstract_factory(): void
+    {
+        $this->artisan('make:module', [
+            'name' => 'Product',
+            '--patterns' => 'model,strategy,state,singleton,abstract-factory',
+            '--fields' => 'name:string',
+        ])->assertExitCode(0);
+
+        $this->assertFileExists(app_path('Strategies/Products/ProductStrategy.php'));
+        $this->assertFileExists(app_path('Strategies/Products/DefaultProductStrategy.php'));
+        $this->assertFileExists(app_path('Strategies/Products/ProductStrategyContext.php'));
+
+        $this->assertFileExists(app_path('States/Products/ProductState.php'));
+        $this->assertFileExists(app_path('States/Products/DraftProductState.php'));
+        $this->assertFileExists(app_path('States/Products/ProductStateContext.php'));
+
+        $this->assertFileExists(app_path('Singletons/ProductRegistry.php'));
+        $registry = File::get(app_path('Singletons/ProductRegistry.php'));
+        $this->assertStringContainsString('public static function getInstance(): self', $registry);
+        $this->assertStringContainsString('private function __construct()', $registry);
+
+        $this->assertFileExists(app_path('Factories/Products/ProductComponentFactory.php'));
+        $this->assertFileExists(app_path('Factories/Products/StandardProductComponentFactory.php'));
+        $this->assertFileExists(app_path('Factories/Products/PremiumProductComponentFactory.php'));
+        $this->assertFileExists(app_path('Factories/Products/ProductComponentClient.php'));
+
+        $context = File::get(app_path('Strategies/Products/ProductStrategyContext.php'));
+        $this->assertStringContainsString('public function execute(Product $product', $context);
+
+        $this->assertGeneratedPhpIsValid([
+            app_path('Strategies/Products/ProductStrategy.php'),
+            app_path('Strategies/Products/ProductStrategyContext.php'),
+            app_path('States/Products/ProductStateContext.php'),
+            app_path('Singletons/ProductRegistry.php'),
+            app_path('Factories/Products/ProductComponentFactory.php'),
+            app_path('Factories/Products/ProductComponentClient.php'),
+        ]);
     }
 
     public function test_architect_feature_prompts_for_name_when_omitted(): void

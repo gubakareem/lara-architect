@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+
+/**
+ * Strategy contract — swap algorithms without changing callers.
+ */
+interface {{ model }}Strategy
+{
+    public function name(): string;
+
+    /**
+     * Apply this strategy to the given {{ model }}.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function apply({{ model }} ${{ modelVariable }}, array $payload = []): {{ model }};
+}

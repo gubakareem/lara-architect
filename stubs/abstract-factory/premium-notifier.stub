@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\Log;
+
+final class Premium{{ model }}Notifier implements {{ model }}Notifier
+{
+    public function notify(array $payload): void
+    {
+        Log::notice('{{ model }} notification (premium)', $payload);
+    }
+}

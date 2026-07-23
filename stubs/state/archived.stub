@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }};
+
+use DomainException;
+
+final class Archived{{ model }}State implements {{ model }}State
+{
+    public function name(): string
+    {
+        return 'archived';
+    }
+
+    public function publish({{ model }}StateContext $context): void
+    {
+        throw new DomainException('Archived {{ model }} cannot be published directly; revert to draft first.');
+    }
+
+    public function archive({{ model }}StateContext $context): void
+    {
+        // Already archived.
+    }
+
+    public function revertToDraft({{ model }}StateContext $context): void
+    {
+        $context->transitionTo(new Draft{{ model }}State);
+    }
+}

@@ -1,0 +1,31 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * Client that depends only on the abstract factory — never on Standard*
+ * or Premium* concretes. Swap the factory to change the whole family.
+ *
+ *     $client = new {{ model }}ComponentClient(new Standard{{ model }}ComponentFactory());
+ *     $client->dispatch(['id' => 1]);
+ */
+final class {{ model }}ComponentClient
+{
+    public function __construct(
+        private readonly {{ model }}ComponentFactory $factory,
+    ) {}
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function dispatch(array $payload): string
+    {
+        $serializer = $this->factory->createSerializer();
+        $notifier = $this->factory->createNotifier();
+
+        $encoded = $serializer->serialize($payload);
+        $notifier->notify(['body' => $encoded]);
+
+        return $encoded;
+    }
+}

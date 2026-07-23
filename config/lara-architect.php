@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use KarimAshraf\LaraArchitect\Generation\Generators\AbstractFactoryGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ActionsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\CommandGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ControllerGenerator;
@@ -19,6 +20,9 @@ use KarimAshraf\LaraArchitect\Generation\Generators\RequestsGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ResourceGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\SeederGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ServiceGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\SingletonGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\StateGenerator;
+use KarimAshraf\LaraArchitect\Generation\Generators\StrategyGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\TestGenerator;
 use KarimAshraf\LaraArchitect\Generation\Generators\ViewsGenerator;
 
@@ -128,6 +132,10 @@ return [
             'query' => QueryGenerator::class,
             'command' => CommandGenerator::class,
             'pipeline' => PipelineGenerator::class,
+            'strategy' => StrategyGenerator::class,
+            'state' => StateGenerator::class,
+            'singleton' => SingletonGenerator::class,
+            'abstract-factory' => AbstractFactoryGenerator::class,
             'filter' => FilterGenerator::class,
             'requests' => RequestsGenerator::class,
             'resource' => ResourceGenerator::class,
@@ -162,6 +170,10 @@ return [
             'query' => 'App\\Queries',
             'command' => 'App\\Commands',
             'pipeline' => 'App\\Pipelines',
+            'strategy' => 'App\\Strategies',
+            'state' => 'App\\States',
+            'singleton' => 'App\\Singletons',
+            'abstract-factory' => 'App\\Factories',
             'filter' => 'App\\Http\\Filters',
             'controller' => 'App\\Http\\Controllers',
             'controller_api' => 'App\\Http\\Controllers\\Api',

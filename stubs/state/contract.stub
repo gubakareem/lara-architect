@@ -1,0 +1,17 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * State contract — each concrete state owns allowed transitions.
+ */
+interface {{ model }}State
+{
+    public function name(): string;
+
+    public function publish({{ model }}StateContext $context): void;
+
+    public function archive({{ model }}StateContext $context): void;
+
+    public function revertToDraft({{ model }}StateContext $context): void;
+}

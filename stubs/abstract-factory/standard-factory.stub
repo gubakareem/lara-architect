@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+final class Standard{{ model }}ComponentFactory implements {{ model }}ComponentFactory
+{
+    public function createNotifier(): {{ model }}Notifier
+    {
+        return new Standard{{ model }}Notifier;
+    }
+
+    public function createSerializer(): {{ model }}Serializer
+    {
+        return new Standard{{ model }}Serializer;
+    }
+}

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- GoF design-pattern generators (distinct from architecture presets):
+  - `strategy` — contract, default/alternative strategies, strategy context
+  - `state` — contract, draft/published/archived states, state context with transitions
+  - `singleton` — `{Model}Registry` with classic Singleton semantics (documents Laravel container preference)
+  - `abstract-factory` — component factory family (notifier + serializer) + client; separate from Eloquent `factory`
+
 ## [1.4.3] - 2026-07-22
 
 ### Added

@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+final class Premium{{ model }}Serializer implements {{ model }}Serializer
+{
+    public function serialize(array $data): string
+    {
+        return json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+    }
+
+    public function deserialize(string $payload): array
+    {
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
+    }
+}

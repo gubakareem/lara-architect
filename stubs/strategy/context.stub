@@ -1,0 +1,67 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use InvalidArgumentException;
+
+/**
+ * Holds the active strategy and delegates work to it.
+ *
+ *     $context = new {{ model }}StrategyContext(new Default{{ model }}Strategy());
+ *     $context->use(new Alternative{{ model }}Strategy());
+ *     $context->execute($product, $payload);
+ */
+final class {{ model }}StrategyContext
+{
+    /** @var array<string, {{ model }}Strategy> */
+    private array $strategies = [];
+
+    public function __construct(
+        private {{ model }}Strategy $strategy,
+    ) {
+        $this->register($strategy);
+    }
+
+    public function register({{ model }}Strategy $strategy): self
+    {
+        $this->strategies[$strategy->name()] = $strategy;
+
+        return $this;
+    }
+
+    public function use({{ model }}Strategy|string $strategy): self
+    {
+        if ($strategy instanceof {{ model }}Strategy) {
+            $this->register($strategy);
+            $this->strategy = $strategy;
+
+            return $this;
+        }
+
+        if (! isset($this->strategies[$strategy])) {
+            throw new InvalidArgumentException(sprintf(
+                'Unknown {{ model }} strategy [%s]. Registered: %s',
+                $strategy,
+                implode(', ', array_keys($this->strategies)) ?: '(none)',
+            ));
+        }
+
+        $this->strategy = $this->strategies[$strategy];
+
+        return $this;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function execute({{ model }} ${{ modelVariable }}, array $payload = []): {{ model }}
+    {
+        return $this->strategy->apply(${{ modelVariable }}, $payload);
+    }
+
+    public function current(): {{ model }}Strategy
+    {
+        return $this->strategy;
+    }
+}

@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+
+final class Alternative{{ model }}Strategy implements {{ model }}Strategy
+{
+    public function name(): string
+    {
+        return 'alternative';
+    }
+
+    public function apply({{ model }} ${{ modelVariable }}, array $payload = []): {{ model }}
+    {
+        // Alternate algorithm — e.g. express pricing, bulk import, etc.
+        ${{ modelVariable }}->fill($payload);
+
+        return ${{ modelVariable }};
+    }
+}
