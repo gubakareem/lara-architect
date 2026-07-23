@@ -66,17 +66,23 @@ Stays: Laravel-compatible · framework-aware at boundaries · **engine-first** i
 
 ### `karim-ashraf/lara-architect-ui` (Workspace)
 
-Separate package. Developer experience only.
+Separate repository and Composer package. Developer experience only.
 
 - Workspace shell · React components
 - History · Replay · Guidance · Governance · Learning · Collaboration views
 
 ```bash
 composer require karim-ashraf/lara-architect-ui
+# requires karim-ashraf/lara-architect ^1.5
 # → /architect/workspace
 ```
 
-The UI does **not** know how analysis works. It consumes snapshots and reports from core.
+```text
+lara-architect-ui  →  lara-architect
+lara-architect     ✗  lara-architect-ui   (never)
+```
+
+The UI does **not** analyze code. It visualizes knowledge from core (`ArchitectureContextEnvelope`, snapshots, reports). **Core discovers. UI explains. Developers decide.**
 
 ### Future packages (ecosystem)
 
@@ -114,9 +120,10 @@ Different users need different things:
 2. **Do not ship Workspace UX inside core** (see [ADR-0008](../adr/0008-visualize-architecture-assistant-ux.md)).
 3. **Stable contracts outward** — snapshots and public events; adapters stay thin.
 4. **Core stays small** — platform growth happens in sibling packages.
-5. **AI consumes knowledge** created by Memory + Learning + human Collaboration — it does not invent it. Future `lara-architect-ai` consumes **ArchitectureContextEnvelope** only (explain / summarize / navigate). It must not call the analyzer directly, invent rules, findings, or architecture decisions.
+5. **One-way dependencies** — consumers (`lara-architect-ui`, Debugbar, VS Code, GitHub, AI) require core; core never requires a consumer.
+6. **AI consumes knowledge** created by Memory + Learning + human Collaboration — it does not invent it. Future `lara-architect-ai` consumes **ArchitectureContextEnvelope** only (explain / summarize / navigate). It must not call the analyzer directly, invent rules, findings, or architecture decisions.
 
-6. **AI speaks from architectural memory — never replaces it.** Preserve forever across VISION, AI package README, contributor guides, and integrations.
+7. **AI speaks from architectural memory — never replaces it.** Preserve forever across VISION, AI package README, contributor guides, and integrations.
 
 ## Further reading
 
