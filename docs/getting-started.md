@@ -41,10 +41,22 @@ The Workspace is a **sibling package** — context-first shell at `/architect/wo
 
 **Requirements:** core package installed · PHP ^8.2 · Laravel 11–13 · Node.js 18+ (to build React assets once).
 
-**From Packagist** (when the UI package is published):
+**From Packagist / GitHub** (sibling repo [`gubakareem/lara-architect-ui`](https://github.com/gubakareem/lara-architect-ui)):
 
 ```bash
 composer require karim-ashraf/lara-architect-ui
+```
+
+Until the package is on Packagist, add a VCS repository in your app `composer.json`:
+
+```json
+"repositories": [
+  { "type": "vcs", "url": "https://github.com/gubakareem/lara-architect-ui" }
+]
+```
+
+```bash
+composer require karim-ashraf/lara-architect-ui:^0.1
 ```
 
 **From a local / path install** (monorepo or sibling folders):
