@@ -2,6 +2,13 @@
 
 This guide walks you from a fresh install to a working CRUD API, step by step.
 
+## Requirements
+
+| Package | PHP | Laravel | Other |
+| --- | --- | --- | --- |
+| Core (`karim-ashraf/lara-architect`) | ^8.2 | 11 / 12 / 13 | Composer |
+| Workspace UI (`karim-ashraf/lara-architect-ui`) | ^8.2 | 11 / 12 / 13 | Core package installed; **Node.js 18+** + npm to build assets |
+
 ## 1. Install and publish the config
 
 ```bash
@@ -12,19 +19,115 @@ php artisan vendor:publish --tag=lara-architect-config
 
 This creates `config/lara-architect.php` in your app. You don't have to touch it yet — the defaults work out of the box — but this file is where you later choose your default architecture, namespaces, and custom generators.
 
+### Update the core package
+
+```bash
+composer update karim-ashraf/lara-architect
+```
+
+After upgrading:
+
+1. Re-check [CHANGELOG.md](../CHANGELOG.md) for breaking or config changes.
+2. If you published config earlier, merge new keys from the package (or delete and re-publish carefully). From **1.4.2** onward, package defaults are deep-merged under a published config, so newer generators keep working without a full re-publish.
+3. Optionally refresh stubs if you customized them:
+
+```bash
+php artisan vendor:publish --tag=lara-architect-stubs --force
+```
+
+### Install the Architecture Workspace (UI / “dashboard”)
+
+The Workspace is a **sibling package** — context-first shell at `/architect/workspace`. It does **not** replace the core CLI.
+
+**Requirements:** core package installed · PHP ^8.2 · Laravel 11–13 · Node.js 18+ (to build React assets once).
+
+**From Packagist** (when the UI package is published):
+
+```bash
+composer require karim-ashraf/lara-architect-ui
+```
+
+**From a local / path install** (monorepo or sibling folders):
+
+```json
+// composer.json in your Laravel app
+"repositories": [
+  { "type": "path", "url": "../lara-architect" },
+  { "type": "path", "url": "../lara-architect-ui" }
+]
+```
+
+```bash
+composer require karim-ashraf/lara-architect-ui:@dev
+cd vendor/karim-ashraf/lara-architect-ui   # or your path package root
+npm install && npm run build
+php artisan vendor:publish --tag=lara-architect-ui-assets
+```
+
+Open:
+
+```text
+/architect/workspace?context=ProductController&context_type=file
+```
+
+JSON (same snapshot adapters use):
+
+```text
+/architect/workspace?context=ProductController&format=json
+```
+
+**Update the Workspace UI:**
+
+```bash
+composer update karim-ashraf/lara-architect-ui
+cd vendor/karim-ashraf/lara-architect-ui && npm install && npm run build
+php artisan vendor:publish --tag=lara-architect-ui-assets --force
+```
+
+Full UI notes: [lara-architect-ui README](../../lara-architect-ui/README.md).
+
 ## 2. See what the package can generate
 
 ```bash
 php artisan architect:patterns
 ```
 
-This lists the available **architecture presets** and the individual **patterns** each one generates:
+This lists **architecture presets** (named stacks) and every **individual pattern** you can pass to `--patterns=…`.
+
+### Architecture presets
 
 | Preset | What it generates |
 | --- | --- |
 | `service-repository` (default) | model, migration, factory, enum, repository, service, filter, requests, resource, controller |
 | `actions` | model, migration, factory, enum, DTO, action classes, filter, requests, resource, controller |
+| `adr` | Same scaffold as `actions` (Action–Domain–Responder) |
+| `ddd` | Domain folders under `App\Domain\{Module}\…` + infrastructure repositories |
+| `cqrs` | Commands (writes) + queries (reads) + DTO + filter, requests, resource, controller |
+| `pipeline` | Illuminate Pipeline (validate + persist pipes) + model/migration/requests/controller |
 | `lean` | model, migration, requests, resource, controller |
+
+```bash
+php artisan make:module Invoice --architecture=ddd --fields="total:decimal"
+php artisan make:module Report --architecture=cqrs --fields="title:string"
+php artisan make:module Checkout --architecture=pipeline --fields="total:decimal"
+```
+
+### GoF / design patterns (add with `--patterns`)
+
+These are **not** Eloquent `factory`. Use the names below:
+
+| Pattern | What it generates |
+| --- | --- |
+| `strategy` | Interface + default/alternative strategies + context |
+| `state` | Interface + draft / published / archived states + context |
+| `singleton` | `{Model}Registry` singleton (prefer container binding in apps) |
+| `abstract-factory` | Family of factories/products (notifier + serializer) + client |
+
+```bash
+php artisan make:module Order --patterns=model,strategy,state,singleton,abstract-factory
+```
+
+Usage examples (Strategy, State, Singleton, Abstract Factory, DDD, CQRS, Pipeline, Actions): **[Design patterns & examples](examples/design-patterns.md)**.
 
 ## 3. Generate your first CRUD module
 
@@ -316,7 +419,60 @@ php artisan make:module Tag \
 
 Generates only: model, migration, form requests, resource, controller. The controller talks to Eloquent directly — no service, repository, or actions.
 
-### 6.4 Hand-picked patterns
+### 6.4 DDD (domain folders)
+
+```bash
+php artisan make:module Invoice --architecture=ddd --fields="total:decimal, status:enum"
+```
+
+Namespaces remap via `architecture_namespaces.ddd` — models/services/DTOs under `App\Domain\Invoice\…`, repositories under `App\Infrastructure\Invoice`. Behaviour matches service-repository; only layout changes. Full tree: [design-patterns.md](examples/design-patterns.md#ddd-preset--domain-layout).
+
+### 6.5 CQRS (commands + queries)
+
+```bash
+php artisan make:module Report --architecture=cqrs --fields="title:string, body:text"
+```
+
+Writes go through command classes; reads through query classes + DTO. Example usage: [design-patterns.md](examples/design-patterns.md#cqrs-preset--commands--queries).
+
+### 6.6 Pipeline
+
+```bash
+php artisan make:module Checkout --architecture=pipeline --fields="total:decimal"
+
+$result = app(\App\Pipelines\Checkouts\CheckoutPipeline::class)->send(['total' => 149.99]);
+```
+
+### 6.7 GoF patterns (Strategy, State, Singleton, Abstract Factory)
+
+```bash
+php artisan make:module Order \
+  --patterns=model,strategy,state,singleton,abstract-factory \
+  --fields="total:decimal"
+```
+
+```php
+// Strategy
+$context = new \App\Strategies\OrderStrategyContext(new \App\Strategies\DefaultOrderStrategy());
+$context->execute($order, ['total' => 99.5]);
+
+// State
+$state = new \App\States\OrderStateContext(new \App\States\DraftOrderState());
+$state->publish();
+
+// Singleton registry
+\App\Singletons\OrderRegistry::getInstance()->set('last', $order->id);
+
+// Abstract Factory (not Eloquent factory)
+$client = new \App\Factories\Orders\OrderComponentClient(
+    new \App\Factories\Orders\StandardOrderComponentFactory()
+);
+$client->dispatch(['id' => 1]);
+```
+
+Longer examples: [Design patterns & examples](examples/design-patterns.md).
+
+### 6.8 Hand-picked patterns
 
 Skip presets and compose your own stack for one module:
 
@@ -343,7 +499,7 @@ List every registered pattern anytime:
 php artisan architect:patterns
 ```
 
-### 6.5 Project default and custom presets
+### 6.9 Project default and custom presets
 
 **Set a project-wide default** in `config/lara-architect.php` or `.env`:
 

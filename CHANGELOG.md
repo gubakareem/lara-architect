@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Expanded [getting started](docs/getting-started.md): all architecture presets, GoF patterns, package update commands, and Architecture Workspace (UI) install / requirements / update.
+- New [design patterns & examples](docs/examples/design-patterns.md): Strategy, State, Singleton, Abstract Factory, DDD, CQRS, Pipeline, Actions/ADR with usage snippets.
+- CHANGELOG brought in line with GoF generators shipped before 1.5.0 (documented under 1.5.0 below).
+
 ## [1.5.1] - 2026-07-23
 
 ### Fixed
@@ -22,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Architecture Brief** (Phase 16) — living transferable understanding with Audience (`developer` / `architect` / `contributor`); not static documentation.
 - **Architecture Context** (Phase 17) — “What should I know before I touch this?” composition from identity, decisions, evolution, and guidance.
 - **ArchitectureContextEnvelope v1.0** — stable pre-AI boundary for UI · IDE · PR · AI; `can_explain` / `can_modify`; typed `allowed_questions`.
+- **GoF pattern generators** (add with `--patterns=…`, distinct from Eloquent `factory`):
+  - `strategy` — interface + default/alternative strategies + context
+  - `state` — draft / published / archived states + context
+  - `singleton` — `{Model}Registry` singleton scaffold
+  - `abstract-factory` — Standard/Premium factory family (notifier + serializer) + client
 - CLI: `architect:ask`, `architect:workspace` enhancements; Ask is read-only.
 - Product constitution: [VISION.md](VISION.md), [philosophy](docs/philosophy.md), [roadmap](docs/roadmap.md), [Architecture Moment Map](docs/architecture/moments.md) (Phase 18 discovery — evidence before surfaces).
 - [ADR-0008](docs/adr/0008-visualize-architecture-assistant-ux.md): Architecture Workspace UX boundary.

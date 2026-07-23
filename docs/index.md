@@ -27,8 +27,9 @@ Welcome. Pick your audience:
 
 ## Usage
 
-- [Getting started](getting-started.md)
-- [Examples](examples/)
+- [Getting started](getting-started.md) — install · update · Workspace UI · first module
+- [Design patterns & examples](examples/design-patterns.md)
+- [Examples index](examples/)
 - [Changelog](../CHANGELOG.md)
 - [Contributing](../CONTRIBUTING.md)
 

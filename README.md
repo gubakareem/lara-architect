@@ -92,6 +92,38 @@ php artisan vendor:publish --tag=lara-architect-stubs
 
 Published stubs live in `stubs/lara-architect/` and always win over the package defaults.
 
+### Update the core package
+
+```bash
+composer update karim-ashraf/lara-architect
+```
+
+After upgrading, skim [CHANGELOG.md](CHANGELOG.md). Published config is deep-merged with package defaults (since 1.4.2), so newer generators keep working without a full re-publish.
+
+### Architecture Workspace UI (optional)
+
+Install beside core for the Workspace at `/architect/workspace`.
+
+| Requirement | Detail |
+| --- | --- |
+| Core | `karim-ashraf/lara-architect` already installed |
+| PHP / Laravel | Same as core (^8.2, Laravel 11–13) |
+| Node.js | **18+** (npm) to build React assets once |
+
+```bash
+composer require karim-ashraf/lara-architect-ui
+# path / local install: see lara-architect-ui README
+
+cd vendor/karim-ashraf/lara-architect-ui && npm install && npm run build
+php artisan vendor:publish --tag=lara-architect-ui-assets
+```
+
+```text
+/architect/workspace?context=ProductController&context_type=file
+```
+
+Update UI later with `composer update karim-ashraf/lara-architect-ui`, rebuild assets, and re-publish `--tag=lara-architect-ui-assets`. Step-by-step: [Getting started](docs/getting-started.md#install-the-architecture-workspace-ui--dashboard) · [UI README](../lara-architect-ui/README.md).
+
 ## Quick start: your first CRUD in five steps
 
 > The full walkthrough with explanations lives in [docs/getting-started.md](docs/getting-started.md).
@@ -176,6 +208,8 @@ GoF patterns (add with `--patterns=…`, not Eloquent `factory`):
 ```bash
 php artisan make:module Order --patterns=model,strategy,state,singleton,abstract-factory
 ```
+
+Usage examples (Strategy, State, Singleton, Abstract Factory, DDD, CQRS, Pipeline): [docs/examples/design-patterns.md](docs/examples/design-patterns.md).
 
 ```php
 'architectures' => [
