@@ -110,12 +110,13 @@ Prefer product milestones over “feature dump” versioning:
 | --- | --- |
 | **Engine** (v1.4) | Graph, rules, baseline, renderers — done |
 | **Integration** (v1.5) | Event bus + public lifecycle events (integration points, not a plugin marketplace yet) |
+| **Visualize** | Architecture Workspace (`ui`, `debugbar`, …) — Notification → Workspace → Insights; see [ADR-0008](0008-visualize-architecture-assistant-ux.md) |
 | **Tooling** | VS Code, GitHub Action, SARIF |
 | **Ecosystem** | Rule packs, metrics packs, suggestion providers |
 | **Platform** (v2.0) | Full architecture platform |
 
 ```
-Engine → Integration → Tooling → Ecosystem → Platform
+Engine → Integration → Visualize → Tooling → Ecosystem → Platform
 ```
 
-v1.5 enables integration points; the ecosystem comes afterwards. LaraArchitect accumulates a stable core first — stable public contracts, replaceable internals, immutable outputs — then a growing ecosystem.
+v1.5 enables integration points; Visualize consumes them via an Architecture Workspace, not by growing the core indefinitely. LaraArchitect accumulates a stable core first — stable public contracts, replaceable internals, immutable outputs — then a growing ecosystem.

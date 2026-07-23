@@ -2,6 +2,22 @@
 
 Thank you for considering contributing to LaraArchitect! Contributions of all kinds are welcome: bug reports, feature ideas, documentation improvements and pull requests.
 
+## Before you write code
+
+1. Read **[VISION.md](VISION.md)** — why the project exists (North Star, principles, constitution).
+2. Read **[docs/philosophy.md](docs/philosophy.md)** — the project constitution.
+3. Skim **[docs/roadmap.md](docs/roadmap.md)** and the **[ADR index](docs/adr/README.md)** — how we build.
+
+**Every new feature should strengthen the engine or improve the developer’s daily workflow inside the Workspace.** If it does neither, reconsider.
+
+**Permanent principle:** *AI speaks from architectural memory — never replaces it.*
+
+**Feature checkpoint:** *Which existing architectural memory does this feature help a developer access?* If unclear, it probably does not belong here.
+
+Before proposing AI or language-layer work, ask: **Does this help developers understand existing architectural intent?** If it would create new architectural truth, it does not belong in the AI layer.
+
+Maintainers releasing versions: see **[MAINTAINERS.md](MAINTAINERS.md)**.
+
 ## Reporting issues
 
 Before opening an issue, please:

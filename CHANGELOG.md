@@ -7,14 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-23
+
 ### Added
 
-- GoF design-pattern generators (distinct from architecture presets):
-  - `strategy` — contract, default/alternative strategies, strategy context
-  - `state` — contract, draft/published/archived states, state context with transitions
-  - `singleton` — `{Model}Registry` with classic Singleton semantics (documents Laravel container preference)
-  - `abstract-factory` — component factory family (notifier + serializer) + client; separate from Eloquent `factory`
-- [ADR-0007](docs/adr/0007-event-bus-for-engine-extensibility.md): event bus for engine extensibility (planned for **v1.5 / Integration** — public extension events, compatibility promise, observational listeners).
+- **Architecture Memory platform** (Workspace): append-only events, baselines, stories, decisions, intelligence, guidance, journeys, standards, governance, evolution, learning, collaboration, knowledge transfer, questions, conversations, decision history, identity, communication, and architecture context.
+- **ArchitectureIdentitySnapshot** — stable identity contract with inertia and identity history; `identity_observed` only via explicit `observe()`.
+- **Architecture Brief** (Phase 16) — living transferable understanding with Audience (`developer` / `architect` / `contributor`); not static documentation.
+- **Architecture Context** (Phase 17) — “What should I know before I touch this?” composition from identity, decisions, evolution, and guidance.
+- **ArchitectureContextEnvelope v1.0** — stable pre-AI boundary for UI · IDE · PR · AI; `can_explain` / `can_modify`; typed `allowed_questions`.
+- CLI: `architect:ask`, `architect:workspace` enhancements; Ask is read-only.
+- Product constitution: [VISION.md](VISION.md), [philosophy](docs/philosophy.md), [roadmap](docs/roadmap.md), [Architecture Moment Map](docs/architecture/moments.md) (Phase 18 discovery — evidence before surfaces).
+- [ADR-0008](docs/adr/0008-visualize-architecture-assistant-ux.md): Architecture Workspace UX boundary.
+- Unit tests for memory, controlled change, fix proposals, and workspace services.
+
+### Changed
+
+- Product positioning: **architecture continuity system** — preserves architectural intent; AI speaks from architectural memory, never replaces it.
+- Foundation frozen at Envelope; next work is evidence collection (Architecture Moments), not engine expansion.
 
 ## [1.4.3] - 2026-07-22
 

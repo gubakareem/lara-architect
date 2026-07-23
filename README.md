@@ -1,11 +1,41 @@
-# LaraArchitect
+# Lara Architect
 
-**Build, enforce, analyze, and evolve Laravel architecture.**
+**Architecture Memory and Improvement Platform for Laravel**
 
-LaraArchitect is an architecture operating system for Laravel — not just a generator. It covers the full lifecycle:
+The Composer package `karim-ashraf/lara-architect` is the entry point. The product vision is a **platform** (core + UI + future integrations) — see [VISION.md](VISION.md) and [docs/architecture/platform.md](docs/architecture/platform.md).
+
+Lara Architect helps you generate solid structure, catch layer violations early, remember what worked, and continuously improve how your app is built — so architecture stays intentional as the codebase grows.
+
+```bash
+composer require karim-ashraf/lara-architect
+
+php artisan architect:new          # generate a module the right way
+php artisan architect:lint         # enforce layer rules
+php artisan architect:analyze      # see health, hotspots, structure
+php artisan architect:workspace    # context + issues + explain (Workspace snapshot)
+php artisan architect:ask "why ProductService exists"  # Phase 13 — living knowledge query
+```
+
+| You want… | Start here |
+| --- | --- |
+| **To use it** | This README → [Getting started](docs/getting-started.md) |
+| **To contribute** | [VISION.md](VISION.md) → [docs/](docs/index.md) → [ADRs](docs/adr/) |
+| **To maintain / release** | [MAINTAINERS.md](MAINTAINERS.md) |
+
+---
+
+**Lara Architect Platform** — package is the entry; platform is the vision ([VISION.md](VISION.md)).
+
+| Install | You get |
+| --- | --- |
+| `karim-ashraf/lara-architect` | Core engine · memory · intelligence · guidance · learning |
+| + `karim-ashraf/lara-architect-ui` | Architecture Workspace at `/architect/workspace` |
+| + future packages | Debugbar · VS Code · GitHub · AI · Enterprise |
+
+Lifecycle:
 
 ```
-Design  →  Generate  →  Analyze  →  Enforce  →  Evolve
+Design  →  Generate  →  Analyze  →  Enforce  →  Visualize  →  Integrate  →  Platform
 ```
 
 | Pillar | What it does |
@@ -14,7 +44,9 @@ Design  →  Generate  →  Analyze  →  Enforce  →  Evolve
 | **Generate** | `make:module`, `architect:feature`, `architect:new` wizard |
 | **Analyze** | Dependency graph, layer counts, hotspots (`architect:analyze`) |
 | **Enforce** | Declarative layer rules + baseline (`architect:lint`) |
-| **Evolve** | Health score & actionable suggestions (v1.4.1 / v1.6) |
+| **Visualize** | Architecture Workspace via [lara-architect-ui](../lara-architect-ui/README.md) ([ADR-0008](docs/adr/0008-visualize-architecture-assistant-ux.md)) |
+| **Integrate** | Event bus / public extension events ([ADR-0007](docs/adr/0007-event-bus-for-engine-extensibility.md)) |
+| **Platform** | Sibling packages around a small, trustworthy core ([platform.md](docs/architecture/platform.md)) |
 
 Under the hood sits a **framework-agnostic ArchitectureEngine** — Artisan commands are thin adapters. You can analyze a codebase with no Laravel bootstrap:
 
@@ -293,9 +325,14 @@ php artisan architect:lint --format=json
 # Layer counts + violations + hotspots
 php artisan architect:analyze
 php artisan architect:analyze --format=json
+
+# Workspace snapshot — current context, issues, explain (UI adapters consume the same JSON)
+php artisan architect:workspace --context=ProductController
+php artisan architect:workspace --format=json
+php artisan architect:workspace --explain="<issue-id>"
 ```
 
-### Baseline (adopt on day one)
+The Workspace command builds a **WorkspaceSnapshot** read model from the engine ([spec](docs/architecture/workspace.md)). React / Debugbar / VS Code will share that payload later.
 
 Existing apps often have hundreds of violations. Freeze them so only *new* ones fail CI:
 

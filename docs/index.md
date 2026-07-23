@@ -1,34 +1,36 @@
 # LaraArchitect Documentation
 
-Welcome to the LaraArchitect documentation. The [README](../README.md) is the primary reference — this page is a map of where to find things.
+Welcome. Pick your audience:
 
-## Quick links
+| Audience | Start here |
+| --- | --- |
+| **Users** | [README](../README.md) → [Getting started](getting-started.md) |
+| **Contributors** | [VISION.md](../VISION.md) → [Philosophy](philosophy.md) → this tree → [ADRs](adr/) |
+| **Maintainers** | [MAINTAINERS.md](../MAINTAINERS.md) |
 
-- [Getting started: from install to a working CRUD API](getting-started.md)
-- [Design pattern examples](getting-started.md#6-choosing-a-design-pattern-architecture) — service-repository, actions + DTO, lean, custom presets
-- [Requirements & supported versions](../README.md#requirements)
-- [Installation](../README.md#installation)
-- [The module generator](../README.md#the-module-generator) — architecture presets, field definitions, enum fields, query filters
-- [Extending the generator](../README.md#extending-the-generator) — register your own pattern generators
-- [Runtime building blocks](../README.md#runtime-building-blocks) — repositories, services, actions, filters, DTOs
-- [Configuration reference](../README.md#configuration-reference)
+## Vision & direction
+
+- [Product vision](../VISION.md)
+- [Philosophy (constitution)](philosophy.md)
+- [Roadmap](roadmap.md) — Foundation → Experience → Automation → Platform
+
+## Architecture
+
+- [Platform](architecture/platform.md) — package family · brand vs Composer entry
+- [Engine](architecture/engine.md)
+- [Workspace](architecture/workspace.md)
+- [Architecture Moment Map](architecture/moments.md) — Phase 18 discovery filter
+- [Events](architecture/events.md)
+- [Rule packs](architecture/rule-packs.md)
+- [UI adapters](architecture/ui.md)
+- [ADR index](adr/)
+
+## Usage
+
+- [Getting started](getting-started.md)
+- [Examples](examples/)
 - [Changelog](../CHANGELOG.md)
-- [Architecture decisions](adr/) — e.g. [ADR-0007: Event bus for engine extensibility](adr/0007-event-bus-for-engine-extensibility.md) (v1.5)
 - [Contributing](../CONTRIBUTING.md)
-
-## What's new
-
-### Version 1.0.0
-
-- Configurable architecture presets (`service-repository`, `actions`, `lean`, or your own)
-- One-command module generation: model, migration, factory, enums, service/actions, DTO, query filter, requests, resource, controller
-- Soft-delete aware repositories and services (`restore`, `restoreAll`, `deleteAll`, `forceDelete`, `trashed`)
-- Request-driven query filters with a `Filterable` model trait
-- String-backed enum generation wired into casts, validation, factories and DTOs
-- Support for Laravel 11, 12 and 13
-- Full test suite, PHPStan (Larastan) and Pint
-
-See the [CHANGELOG](../CHANGELOG.md) for full details.
 
 ## License
 
